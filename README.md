@@ -65,6 +65,12 @@ Matching a pattern against ~60K files from the Linux kernel takes about 70ms.
 Everyone is welcome to contribute. Please send me a pull request or file an issue. I promise
 to respond promptly.
 
+## Credits
+
+The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js). 
+See [this](https://blog.forrestthewoods.com/reverse-engineering-sublime-text-s-fuzzy-match-4cffeed33fdb#.d05n81yjy)
+blog post for details of the algorithm.
+
 ## License
 
 The MIT License (MIT)
