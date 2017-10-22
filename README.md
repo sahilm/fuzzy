@@ -49,6 +49,20 @@ func main() {
 
 `go get github.com/sahilm/fuzzy` or use your favorite dependency management tool.
 
+## Speed
+
+Here are a few benchmark results on a normal laptop.
+
+```
+BenchmarkFind/with_unreal_4_(~16K_files)-4         	      50	  30668915 ns/op
+BenchmarkFind/with_linux_kernel_(~60K_files)-4     	      20	  70854081 ns/op
+```
+
+## Contributing
+
+Everyone is welcome to contribute. Please send me a pull request or file an issue. I promise
+to respond promptly.
+
 ## License
 
 The MIT License (MIT)
