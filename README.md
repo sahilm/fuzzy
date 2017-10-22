@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
 [![Documentation](https://godoc.org/github.com/sahilm/fuzzy?status.svg)](https://godoc.org/github.com/sahilm/fuzzy)
 
-
+![demo](demo.gif)
 
 ## License
 
