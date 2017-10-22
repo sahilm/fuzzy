@@ -78,6 +78,10 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"cats", []string{"cat"}, []Match{},
 		},
+		// empty patterns return no matches
+		{
+			"", []string{"cat"}, []Match{},
+		},
 	}
 	for _, c := range cases {
 		matches := Find(c.pattern, c.data)

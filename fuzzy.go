@@ -54,6 +54,9 @@ Penalties are applied for every character in the search string that wasn't match
 characters upto the first match.
 */
 func Find(pattern string, data []string) []Match {
+	if len(pattern) == 0 {
+		return []Match{}
+	}
 	matches := make([]Match, 0)
 	for i := 0; i < len(data); i++ {
 		candidate := strings.Split(data[i], "")
