@@ -58,6 +58,8 @@ BenchmarkFind/with_unreal_4_(~16K_files)-4         	      50	  30668915 ns/op
 BenchmarkFind/with_linux_kernel_(~60K_files)-4     	      20	  70854081 ns/op
 ```
 
+Matching a pattern against ~60K files from the Linux kernel takes about 70ms.
+
 ## Contributing
 
 Everyone is welcome to contribute. Please send me a pull request or file an issue. I promise
