@@ -2,7 +2,52 @@
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
 [![Documentation](https://godoc.org/github.com/sahilm/fuzzy?status.svg)](https://godoc.org/github.com/sahilm/fuzzy)
 
+Go package that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
+VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only depends on the Go standard library.
+
+## Demo
+
+Here is a [demo](_example/main.go) of matching various patterns against ~16K files from the Unreal Engine 4 codebase.
+
 ![demo](demo.gif)
+
+You can run the demo yourself like so:
+
+```
+cd _example/
+go get github.com/jroimartin/gocui
+go run main.go
+```
+
+## Usage
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/sahilm/fuzzy"
+)
+
+func main() {
+	pattern := "mnr"
+	data := []string{"game.cpp", "moduleNameResolver.ts", "my name is_Ramsey"}
+
+	matches := fuzzy.Find(pattern, data)
+
+	for _, match := range matches {
+		fmt.Println(match.Str)
+		// Output:
+		// my name is_Ramsey
+		// moduleNameResolver.ts
+	}
+}
+``` 
+
+## Installation
+
+`go get github.com/sahilm/fuzzy` or use your favorite dependency management tool.
 
 ## License
 
