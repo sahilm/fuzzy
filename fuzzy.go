@@ -128,7 +128,7 @@ func Find(pattern string, data []string) []Match {
 		// apply penalty for each unmatched character
 		penalty := len(match.MatchedIndexes) - len(data[i])
 		match.score += penalty
-		if len(match.MatchedIndexes) == len(pattern) && match.score >= 0 {
+		if len(match.MatchedIndexes) == len(pattern) {
 			matches = insertMatch(matches, match)
 		}
 	}
