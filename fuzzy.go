@@ -33,7 +33,7 @@ const (
 	maxUnmatchedLeadingCharPenalty = -9
 )
 
-var separators = []string{"/", "-", "_", " "}
+var separators = []string{"/", "-", "_", " ", "."}
 
 /*
 Find looks up pattern in data and returns matches
