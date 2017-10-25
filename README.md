@@ -1,3 +1,12 @@
+<figure>
+  <img src="search-gopher-1.png" alt="gopher looking for stuff">
+  <img src="search-gopher-2.png" alt="gopher found stuff">
+  <figcaption>
+    Awesome Gophers (The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). 
+    The design is licensed under the Creative Commons 3.0 Attributions license.)
+  </figcaption>
+</figure>
+
 # fuzzy
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
 [![Documentation](https://godoc.org/github.com/sahilm/fuzzy?status.svg)](https://godoc.org/github.com/sahilm/fuzzy)
