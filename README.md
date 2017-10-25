@@ -69,11 +69,14 @@ to respond promptly.
 
 ## Credits
 
-The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js). 
+* The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js). 
 See [this](https://blog.forrestthewoods.com/reverse-engineering-sublime-text-s-fuzzy-match-4cffeed33fdb#.d05n81yjy)
 blog post for details of the algorithm.
 
-The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). The design is licensed under the Creative Commons 3.0 Attributions license.
+* The artwork is by my lovely wife based on the Go Gopher.
+
+* The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). 
+The design is licensed under the Creative Commons 3.0 Attributions license.
 
 ## License
 
