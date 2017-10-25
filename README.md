@@ -75,7 +75,7 @@ to respond promptly.
 See [this](https://blog.forrestthewoods.com/reverse-engineering-sublime-text-s-fuzzy-match-4cffeed33fdb#.d05n81yjy)
 blog post for details of the algorithm.
 
-* The artwork is by my lovely wife based on the Go Gopher.
+* The artwork is by my lovely wife Sanah. It's based on the Go Gopher.
 
 * The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). 
 The design is licensed under the Creative Commons 3.0 Attributions license.
