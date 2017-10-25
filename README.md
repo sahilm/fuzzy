@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
 [![Documentation](https://godoc.org/github.com/sahilm/fuzzy?status.svg)](https://godoc.org/github.com/sahilm/fuzzy)
 
-Go package that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
+Go library that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
 VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only depends on the Go standard library.
 
 ## Demo
@@ -46,6 +46,8 @@ func main() {
 	}
 }
 ``` 
+
+Check out the [godoc](https://godoc.org/github.com/sahilm/fuzzy) for detailed documentation.
 
 ## Installation
 
