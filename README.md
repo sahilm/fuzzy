@@ -1,11 +1,4 @@
-<figure>
-  <img src="search-gopher-1.png" alt="gopher looking for stuff">
-  <img src="search-gopher-2.png" alt="gopher found stuff">
-  <figcaption>
-    Awesome Gophers (The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). 
-    The design is licensed under the Creative Commons 3.0 Attributions license.)
-  </figcaption>
-</figure>
+<img src="search-gopher-1.png" alt="gopher looking for stuff">  <img src="search-gopher-2.png" alt="gopher found stuff">
 
 # fuzzy
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
@@ -79,6 +72,8 @@ to respond promptly.
 The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js). 
 See [this](https://blog.forrestthewoods.com/reverse-engineering-sublime-text-s-fuzzy-match-4cffeed33fdb#.d05n81yjy)
 blog post for details of the algorithm.
+
+The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). The design is licensed under the Creative Commons 3.0 Attributions license.
 
 ## License
 
