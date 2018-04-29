@@ -34,6 +34,12 @@ const (
 
 var separators = []rune("/-_ .")
 
+type Matches []Match
+
+func (a Matches) Len() int           { return len(a) }
+func (a Matches) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a Matches) Less(i, j int) bool { return a[i].score >= a[j].score }
+
 /*
 Find looks up pattern in data and returns matches
 in descending order of match quality. Match quality
@@ -52,12 +58,12 @@ The following types of matches apply a bonus:
 Penalties are applied for every character in the search string that wasn't matched and all leading
 characters upto the first match.
 */
-func Find(pattern string, data []string) []Match {
+func Find(pattern string, data []string) Matches {
 	if len(pattern) == 0 {
 		return nil
 	}
 	runes := []rune(pattern)
-	var matches []Match
+	var matches Matches
 	var matchedIndexes []int
 	for i := 0; i < len(data); i++ {
 		var match Match
@@ -93,10 +99,11 @@ func Find(pattern string, data []string) []Match {
 				}
 				if len(match.MatchedIndexes) > 0 {
 					lastMatch := match.MatchedIndexes[len(match.MatchedIndexes)-1]
-					score += adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
+					bonus := adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
+					score += bonus
 					// adjacent matches are incremental and keep increasing based on previous adjacent matches
 					// thus we need to maintain the current match bonus
-					currAdjacentMatchBonus += adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
+					currAdjacentMatchBonus += bonus
 				}
 				if score > bestScore {
 					bestScore = score
@@ -147,9 +154,7 @@ func Find(pattern string, data []string) []Match {
 			matchedIndexes = match.MatchedIndexes[:0] // Recycle match index slice
 		}
 	}
-	sort.SliceStable(matches, func(i int, j int) bool {
-		return matches[i].score >= matches[j].score
-	})
+	sort.Stable(matches)
 	return matches
 }
 
