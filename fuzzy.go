@@ -7,7 +7,8 @@ package fuzzy
 
 import (
 	"sort"
-	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Match represents a matched string.
@@ -18,8 +19,6 @@ type Match struct {
 	Index int
 	// The indexes of matched characters. Useful for highlighting matches.
 	MatchedIndexes []int
-	// Marker to identify if the Match has been initialized
-	initialized bool
 	// Score used to rank matches
 	score int
 }
@@ -33,7 +32,7 @@ const (
 	maxUnmatchedLeadingCharPenalty = -9
 )
 
-var separators = []string{"/", "-", "_", " ", "."}
+const separators = "/-_ ."
 
 /*
 Find looks up pattern in data and returns matches
@@ -55,35 +54,38 @@ characters upto the first match.
 */
 func Find(pattern string, data []string) []Match {
 	if len(pattern) == 0 {
-		return []Match{}
+		return nil
 	}
-	matches := make([]Match, 0)
+	runes := []rune(pattern)
+	var matches []Match
+	var matchedIndexes []int
 	for i := 0; i < len(data); i++ {
-		candidate := strings.Split(data[i], "")
-		match := Match{
-			MatchedIndexes: make([]int, 0),
+		var match Match
+		match.Str = data[i]
+		match.Index = i
+		if matchedIndexes != nil {
+			match.MatchedIndexes = matchedIndexes
+		} else {
+			match.MatchedIndexes = make([]int, 0, len(pattern))
 		}
 		var score int
 		patternIndex := 0
 		bestScore := -1
 		matchedIndex := -1
 		currAdjacentMatchBonus := 0
-		for j := 0; j < len(candidate); j++ {
-			c := strings.ToLower(candidate[j])
-			p := strings.ToLower(string(pattern[patternIndex]))
-			if p == c {
-				// avoid repeatedly setting params that apply to the whole match
-				if !match.initialized {
-					match.Str = data[i]
-					match.Index = i
-					match.initialized = true
-				}
+		var last rune
+		for j, candidate := range data[i] {
+			if equalFold(candidate, runes[patternIndex]) {
 				score = 0
 				if j == 0 {
 					score += firstCharMatchBonus
 				}
-				score += camelCaseBonus(j, candidate)
-				score += separatorBonus(j, candidate)
+				if unicode.IsLower(last) && unicode.IsUpper(candidate) {
+					score += camelCaseMatchBonus
+				}
+				if j != 0 && isSeparator(last) {
+					score += matchFollowingSeparatorBonus
+				}
 				if len(match.MatchedIndexes) > 0 {
 					lastMatch := match.MatchedIndexes[len(match.MatchedIndexes)-1]
 					score += adjacentCharBonus(j, lastMatch, currAdjacentMatchBonus)
@@ -96,26 +98,29 @@ func Find(pattern string, data []string) []Match {
 					matchedIndex = j
 				}
 			}
-			nextp := ""
-			if patternIndex < len(pattern)-1 {
-				nextp = strings.ToLower(string(pattern[patternIndex+1]))
+			var nextp rune
+			if patternIndex < len(runes)-1 {
+				nextp = runes[patternIndex+1]
 			}
-			nextc := ""
-			if j < len(candidate)-1 {
-				nextc = strings.ToLower(candidate[j+1])
+			var nextc rune
+			runeLen := utf8.RuneLen(candidate)
+			if j+runeLen < len(data[i]) {
+				if data[i][j+runeLen] < utf8.RuneSelf { // Fast path for ASCII
+					nextc = rune(data[i][j+runeLen])
+				} else {
+					nextc, _ = utf8.DecodeRuneInString(data[i][j+runeLen:])
+				}
 			}
 			// We apply the best score when we have the next match coming up or when the search string has ended.
 			// Tracking when the next match is coming up allows us to exhaustively find the best match and not necessarily
 			// the first match.
 			// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
 			// to match the second k thus giving this string a higher score.
-			if nextp == nextc || j == len(candidate)-1 {
+			if equalFold(nextp, nextc) || j == len(data[i])-1 {
 				if matchedIndex > -1 {
 					if len(match.MatchedIndexes) == 0 {
 						penalty := matchedIndex * unmatchedLeadingCharPenalty
-						if penalty < 0 {
-							bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
-						}
+						bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
 					}
 					match.score += bestScore
 					match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
@@ -124,45 +129,48 @@ func Find(pattern string, data []string) []Match {
 					patternIndex++
 				}
 			}
+			last = candidate
 		}
 		// apply penalty for each unmatched character
 		penalty := len(match.MatchedIndexes) - len(data[i])
 		match.score += penalty
 		if len(match.MatchedIndexes) == len(pattern) {
-			matches = insertMatch(matches, match)
+			matches = append(matches, match)
+			matchedIndexes = nil
+		} else {
+			matchedIndexes = match.MatchedIndexes[:0] // Recycle match index slice
 		}
 	}
-	return matches
-}
-
-func insertMatch(matches []Match, match Match) []Match {
-	i := sort.Search(len(matches), func(i int) bool {
-		return matches[i].score <= match.score
+	sort.SliceStable(matches, func(i int, j int) bool {
+		return matches[i].score >= matches[j].score
 	})
-	matches = append(matches, Match{})
-	copy(matches[i+1:], matches[i:])
-	matches[i] = match
 	return matches
 }
 
-func separatorBonus(i int, s []string) int {
-	if i == 0 {
-		return 0
+// Taken from strings.EqualFold
+func equalFold(tr, sr rune) bool {
+	if tr == sr {
+		return true
 	}
-	if isSeparator(s[i-1]) {
-		return matchFollowingSeparatorBonus
+	if tr < sr {
+		tr, sr = sr, tr
 	}
-	return 0
-}
+	// Fast check for ASCII.
+	if tr < utf8.RuneSelf {
+		// ASCII, and sr is upper case.  tr must be lower case.
+		if 'A' <= sr && sr <= 'Z' && tr == sr+'a'-'A' {
+			return true
+		}
+		return false
+	}
 
-func camelCaseBonus(i int, s []string) int {
-	if i == 0 {
-		return 0
+	// General case. SimpleFold(x) returns the next equivalent rune > x
+	// or wraps around to smaller values.
+	r := unicode.SimpleFold(sr)
+	for r != sr && r < tr {
+		r = unicode.SimpleFold(r)
 	}
-	if isLowerCase(s[i-1]) && isUpperCase(s[i]) {
-		return camelCaseMatchBonus
-	}
-	return 0
+	return r == tr
 }
 
 func adjacentCharBonus(i int, lastMatch int, currentBonus int) int {
@@ -172,21 +180,13 @@ func adjacentCharBonus(i int, lastMatch int, currentBonus int) int {
 	return 0
 }
 
-func isSeparator(s string) bool {
+func isSeparator(s rune) bool {
 	for _, sep := range separators {
 		if s == sep {
 			return true
 		}
 	}
 	return false
-}
-
-func isUpperCase(s string) bool {
-	return s != strings.ToLower(s)
-}
-
-func isLowerCase(s string) bool {
-	return s != strings.ToUpper(s)
 }
 
 func max(x int, y int) int {

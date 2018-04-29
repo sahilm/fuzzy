@@ -26,7 +26,6 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
-					initialized:    true,
 					score:          32,
 				},
 			},
@@ -38,14 +37,12 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "my name is_Ramsey",
 					Index:          1,
 					MatchedIndexes: []int{0, 3, 11},
-					initialized:    true,
 					score:          36,
 				},
 				{
 					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
-					initialized:    true,
 					score:          32,
 				},
 			},
@@ -57,7 +54,6 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "aaa",
 					Index:          0,
 					MatchedIndexes: []int{0, 1, 2},
-					initialized:    true,
 					score:          30,
 				},
 			},
@@ -69,7 +65,6 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "The Black Knight",
 					Index:          0,
 					MatchedIndexes: []int{0, 10},
-					initialized:    true,
 					score:          16,
 				},
 			},
@@ -186,6 +181,9 @@ func TestFindWithRealworldData(t *testing.T) {
 			elapsed := time.Since(now)
 			fmt.Printf("Matching '%v' in linux kernel... found %v matches in %v\n", c.pattern, len(matches), elapsed)
 			foundfilenames := make([]string, 0)
+			if len(matches) < c.numMatches {
+				t.Fatal("Too few matches")
+			}
 			for i := 0; i < c.numMatches; i++ {
 				foundfilenames = append(foundfilenames, matches[i].Str)
 			}
@@ -204,7 +202,7 @@ func BenchmarkFind(b *testing.B) {
 			b.Fatal(err)
 		}
 		filenames := strings.Split(string(bytes), "\n")
-
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			Find("lll", filenames)
 		}
@@ -216,7 +214,7 @@ func BenchmarkFind(b *testing.B) {
 			b.Fatal(err)
 		}
 		filenames := strings.Split(string(bytes), "\n")
-
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			Find("alsa", filenames)
 		}
