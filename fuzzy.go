@@ -32,7 +32,7 @@ const (
 	maxUnmatchedLeadingCharPenalty = -9
 )
 
-const separators = "/-_ ."
+var separators = []rune("/-_ .")
 
 /*
 Find looks up pattern in data and returns matches
@@ -74,7 +74,12 @@ func Find(pattern string, data []string) []Match {
 		matchedIndex := -1
 		currAdjacentMatchBonus := 0
 		var last rune
-		for j, candidate := range data[i] {
+		var lastIndex int
+		nextc, nextSize := utf8.DecodeRuneInString(data[i])
+		var candidate rune
+		var candidateSize int
+		for j := 0; j < len(data[i]); j += candidateSize {
+			candidate, candidateSize = nextc, nextSize
 			if equalFold(candidate, runes[patternIndex]) {
 				score = 0
 				if j == 0 {
@@ -88,10 +93,10 @@ func Find(pattern string, data []string) []Match {
 				}
 				if len(match.MatchedIndexes) > 0 {
 					lastMatch := match.MatchedIndexes[len(match.MatchedIndexes)-1]
-					score += adjacentCharBonus(j, lastMatch, currAdjacentMatchBonus)
+					score += adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
 					// adjacent matches are incremental and keep increasing based on previous adjacent matches
 					// thus we need to maintain the current match bonus
-					currAdjacentMatchBonus += adjacentCharBonus(j, lastMatch, currAdjacentMatchBonus)
+					currAdjacentMatchBonus += adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
 				}
 				if score > bestScore {
 					bestScore = score
@@ -102,21 +107,21 @@ func Find(pattern string, data []string) []Match {
 			if patternIndex < len(runes)-1 {
 				nextp = runes[patternIndex+1]
 			}
-			var nextc rune
-			runeLen := utf8.RuneLen(candidate)
-			if j+runeLen < len(data[i]) {
-				if data[i][j+runeLen] < utf8.RuneSelf { // Fast path for ASCII
-					nextc = rune(data[i][j+runeLen])
+			if j+candidateSize < len(data[i]) {
+				if data[i][j+candidateSize] < utf8.RuneSelf { // Fast path for ASCII
+					nextc, nextSize = rune(data[i][j+candidateSize]), 1
 				} else {
-					nextc, _ = utf8.DecodeRuneInString(data[i][j+runeLen:])
+					nextc, nextSize = utf8.DecodeRuneInString(data[i][j+candidateSize:])
 				}
+			} else {
+				nextc, nextSize = 0, 0
 			}
 			// We apply the best score when we have the next match coming up or when the search string has ended.
 			// Tracking when the next match is coming up allows us to exhaustively find the best match and not necessarily
 			// the first match.
 			// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
 			// to match the second k thus giving this string a higher score.
-			if equalFold(nextp, nextc) || j == len(data[i])-1 {
+			if equalFold(nextp, nextc) || nextc == 0 {
 				if matchedIndex > -1 {
 					if len(match.MatchedIndexes) == 0 {
 						penalty := matchedIndex * unmatchedLeadingCharPenalty
@@ -129,6 +134,7 @@ func Find(pattern string, data []string) []Match {
 					patternIndex++
 				}
 			}
+			lastIndex = j
 			last = candidate
 		}
 		// apply penalty for each unmatched character
@@ -174,7 +180,7 @@ func equalFold(tr, sr rune) bool {
 }
 
 func adjacentCharBonus(i int, lastMatch int, currentBonus int) int {
-	if lastMatch == i-1 {
+	if lastMatch == i {
 		return currentBonus*2 + adjacentMatchBonus
 	}
 	return 0
