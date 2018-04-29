@@ -12,6 +12,13 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 )
 
+func TestFindWithUnicode(t *testing.T) {
+	matches := Find("\U0001F41D", []string{"\U0001F41D"})
+	if len(matches) != 1 {
+		t.Errorf("got %v matches; expected 1 match", len(matches))
+	}
+}
+
 func TestFindWithCannedData(t *testing.T) {
 	cases := []struct {
 		pattern string

@@ -66,7 +66,7 @@ func Find(pattern string, data []string) []Match {
 		if matchedIndexes != nil {
 			match.MatchedIndexes = matchedIndexes
 		} else {
-			match.MatchedIndexes = make([]int, 0, len(pattern))
+			match.MatchedIndexes = make([]int, 0, len(runes))
 		}
 		var score int
 		patternIndex := 0
@@ -140,7 +140,7 @@ func Find(pattern string, data []string) []Match {
 		// apply penalty for each unmatched character
 		penalty := len(match.MatchedIndexes) - len(data[i])
 		match.score += penalty
-		if len(match.MatchedIndexes) == len(pattern) {
+		if len(match.MatchedIndexes) == len(runes) {
 			matches = append(matches, match)
 			matchedIndexes = nil
 		} else {
