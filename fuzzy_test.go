@@ -30,6 +30,16 @@ func TestFindWithCannedData(t *testing.T) {
 				},
 			},
 		},
+		{
+			"mmt", []string{"mémeTemps"}, []Match{
+				{
+					Str:            "mémeTemps",
+					Index:          0,
+					MatchedIndexes: []int{0, 3, 5},
+					score:          23,
+				},
+			},
+		},
 		// ranking
 		{
 			"mnr", []string{"moduleNameResolver.ts", "my name is_Ramsey"}, []Match{
