@@ -163,7 +163,12 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 			fmt.Fprintf(results, "found %v matches in %v\n", len(matches), elapsed)
 			for _, match := range matches {
 				for i := 0; i < len(match.Str); i++ {
-					fmt.Fprintf(results, string(match.Str[i]))
+					if contains(i, match.MatchedIndexes) {
+						fmt.Fprintf(results, fmt.Sprintf("\033[1m%s\033[0m", string(match.Str[i])))
+					} else {
+						fmt.Fprintf(results, string(match.Str[i]))
+					}
+
 				}
 				fmt.Fprintln(results, "")
 			}
@@ -185,7 +190,11 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 			fmt.Fprintf(results, "found %v matches in %v\n", len(matches), elapsed)
 			for _, match := range matches {
 				for i := 0; i < len(match.Str); i++ {
-					fmt.Fprintf(results, string(match.Str[i]))
+					if contains(i, match.MatchedIndexes) {
+						fmt.Fprintf(results, fmt.Sprintf("\033[1m%s\033[0m", string(match.Str[i])))
+					} else {
+						fmt.Fprintf(results, string(match.Str[i]))
+					}
 				}
 				fmt.Fprintln(results, "")
 			}
@@ -205,7 +214,11 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 			fmt.Fprintf(results, "found %v matches in %v\n", len(matches), elapsed)
 			for _, match := range matches {
 				for i := 0; i < len(match.Str); i++ {
-					fmt.Fprintf(results, string(match.Str[i]))
+					if contains(i, match.MatchedIndexes) {
+						fmt.Fprintf(results, fmt.Sprintf("\033[1m%s\033[0m", string(match.Str[i])))
+					} else {
+						fmt.Fprintf(results, string(match.Str[i]))
+					}
 				}
 				fmt.Fprintln(results, "")
 			}
@@ -214,4 +227,13 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	case key == gocui.KeyInsert:
 		v.Overwrite = !v.Overwrite
 	}
+}
+
+func contains(needle int, haystack []int) bool {
+	for _, i := range haystack {
+		if needle == i {
+			return true
+		}
+	}
+	return false
 }
