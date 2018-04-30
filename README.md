@@ -7,6 +7,20 @@
 Go library that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
 VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only depends on the Go standard library.
 
+## Features
+
+- Intuitive matching. Results are returned in descending order of match quality. Quality is determined by:
+  - The first character in the pattern matches the first character in the match string.
+  - The matched character is camel cased.
+  - The matched character follows a separator such as an underscore character.
+  - The matched character is adjacent to a previous match.
+
+- Speed. Matches are returned in milliseconds. It's perfect for interactive search boxes.
+
+- The positions of matches is returned. Allows you to highlight matching characters.
+
+- Unicode aware.
+
 ## Demo
 
 Here is a [demo](_example/main.go) of matching various patterns against ~16K files from the Unreal Engine 4 codebase.
@@ -23,6 +37,8 @@ go run main.go
 
 ## Usage
 
+The following example prints out matches with the matched chars in bold.
+
 ```go
 package main
 
@@ -33,17 +49,31 @@ import (
 )
 
 func main() {
+	const bold = "\033[1m%s\033[0m"
 	pattern := "mnr"
 	data := []string{"game.cpp", "moduleNameResolver.ts", "my name is_Ramsey"}
 
 	matches := fuzzy.Find(pattern, data)
 
 	for _, match := range matches {
-		fmt.Println(match.Str)
-		// Output:
-		// my name is_Ramsey
-		// moduleNameResolver.ts
+		for i := 0; i < len(match.Str); i++ {
+			if contains(i, match.MatchedIndexes) {
+				fmt.Print(fmt.Sprintf(bold, string(match.Str[i])))
+			} else {
+				fmt.Print(string(match.Str[i]))
+			}
+		}
+		fmt.Println()
 	}
+}
+
+func contains(needle int, haystack []int) bool {
+	for _, i := range haystack {
+		if needle == i {
+			return true
+		}
+	}
+	return false
 }
 ``` 
 
@@ -70,6 +100,8 @@ Everyone is welcome to contribute. Please send me a pull request or file an issu
 to respond promptly.
 
 ## Credits
+
+* @ericpauley & @lunixbochs contributed Unicode awareness and various performance optimisations.
 
 * The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js). 
 See [this](https://blog.forrestthewoods.com/reverse-engineering-sublime-text-s-fuzzy-match-4cffeed33fdb#.d05n81yjy)
