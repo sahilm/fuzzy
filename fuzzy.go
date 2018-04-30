@@ -28,8 +28,8 @@ const (
 	matchFollowingSeparatorBonus   = 20
 	camelCaseMatchBonus            = 20
 	adjacentMatchBonus             = 5
-	unmatchedLeadingCharPenalty    = -3
-	maxUnmatchedLeadingCharPenalty = -9
+	unmatchedLeadingCharPenalty    = -5
+	maxUnmatchedLeadingCharPenalty = -15
 )
 
 var separators = []rune("/-_ .")

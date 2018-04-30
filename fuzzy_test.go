@@ -125,8 +125,8 @@ func TestFindWithRealworldData(t *testing.T) {
 			{
 				"lll", 3, []string{
 					"LogFileLogger.cs",
-					"SVisualLoggerLogsList.h",
 					"LockFreeListImpl.h",
+					"LevelExporterLOD.h",
 				},
 			},
 			{
