@@ -58,11 +58,11 @@ Check out the [godoc](https://godoc.org/github.com/sahilm/fuzzy) for detailed do
 Here are a few benchmark results on a normal laptop.
 
 ```
-BenchmarkFind/with_unreal_4_(~16K_files)-4         	      50	  30668915 ns/op
-BenchmarkFind/with_linux_kernel_(~60K_files)-4     	      20	  70854081 ns/op
+BenchmarkFind/with_unreal_4_(~16K_files)-4         	     200	   6055305 ns/op
+BenchmarkFind/with_linux_kernel_(~60K_files)-4     	     100	  15180672 ns/op
 ```
 
-Matching a pattern against ~60K files from the Linux kernel takes about 70ms.
+Matching a pattern against ~60K files from the Linux kernel takes about 15ms.
 
 ## Contributing
 
