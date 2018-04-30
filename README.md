@@ -1,4 +1,4 @@
-<img src="search-gopher-1.png" alt="gopher looking for stuff">  <img src="search-gopher-2.png" alt="gopher found stuff">
+<img src="assets/search-gopher-1.png" alt="gopher looking for stuff">  <img src="assets/search-gopher-2.png" alt="gopher found stuff">
 
 # fuzzy
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
@@ -11,7 +11,7 @@ VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only d
 
 Here is a [demo](_example/main.go) of matching various patterns against ~16K files from the Unreal Engine 4 codebase.
 
-![demo](demo.gif)
+![demo](assets/demo.gif)
 
 You can run the demo yourself like so:
 
