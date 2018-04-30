@@ -13,6 +13,8 @@ import (
 
 // Match represents a matched string.
 type Match struct {
+	// The matched string.
+	Str string
 	// The index of the matched string in the supplied slice.
 	Index int
 	// The indexes of matched characters. Useful for highlighting matches.
@@ -66,6 +68,7 @@ func Find(pattern string, data []string) Matches {
 	var matchedIndexes []int
 	for i := 0; i < len(data); i++ {
 		var match Match
+		match.Str = data[i]
 		match.Index = i
 		if matchedIndexes != nil {
 			match.MatchedIndexes = matchedIndexes

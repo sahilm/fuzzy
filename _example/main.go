@@ -162,8 +162,8 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 			elapsed := time.Since(t)
 			fmt.Fprintf(results, "found %v matches in %v\n", len(matches), elapsed)
 			for _, match := range matches {
-				for i := 0; i < len(filenames[match.Index]); i++ {
-					fmt.Fprintf(results, string(filenames[match.Index][i]))
+				for i := 0; i < len(match.Str); i++ {
+					fmt.Fprintf(results, string(match.Str[i]))
 				}
 				fmt.Fprintln(results, "")
 			}
@@ -184,8 +184,8 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 			elapsed := time.Since(t)
 			fmt.Fprintf(results, "found %v matches in %v\n", len(matches), elapsed)
 			for _, match := range matches {
-				for i := 0; i < len(filenames[match.Index]); i++ {
-					fmt.Fprintf(results, string(filenames[match.Index][i]))
+				for i := 0; i < len(match.Str); i++ {
+					fmt.Fprintf(results, string(match.Str[i]))
 				}
 				fmt.Fprintln(results, "")
 			}
@@ -204,8 +204,8 @@ func finder(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 			elapsed := time.Since(t)
 			fmt.Fprintf(results, "found %v matches in %v\n", len(matches), elapsed)
 			for _, match := range matches {
-				for i := 0; i < len(filenames[match.Index]); i++ {
-					fmt.Fprintf(results, string(filenames[match.Index][i]))
+				for i := 0; i < len(match.Str); i++ {
+					fmt.Fprintf(results, string(match.Str[i]))
 				}
 				fmt.Fprintln(results, "")
 			}
