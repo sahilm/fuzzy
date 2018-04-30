@@ -34,6 +34,7 @@ const (
 
 var separators = []rune("/-_ .")
 
+// Matches is a slice of Match structs
 type Matches []Match
 
 func (a Matches) Len() int           { return len(a) }
