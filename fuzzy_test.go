@@ -30,7 +30,6 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"mnr", []string{"moduleNameResolver.ts"}, []Match{
 				{
-					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
 					score:          32,
@@ -40,7 +39,6 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"mmt", []string{"mémeTemps"}, []Match{
 				{
-					Str:            "mémeTemps",
 					Index:          0,
 					MatchedIndexes: []int{0, 3, 5},
 					score:          23,
@@ -51,13 +49,11 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"mnr", []string{"moduleNameResolver.ts", "my name is_Ramsey"}, []Match{
 				{
-					Str:            "my name is_Ramsey",
 					Index:          1,
 					MatchedIndexes: []int{0, 3, 11},
 					score:          36,
 				},
 				{
-					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
 					score:          32,
@@ -68,7 +64,6 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"aaa", []string{"aaa", "bbb"}, []Match{
 				{
-					Str:            "aaa",
 					Index:          0,
 					MatchedIndexes: []int{0, 1, 2},
 					score:          30,
@@ -79,7 +74,6 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"tk", []string{"The Black Knight"}, []Match{
 				{
-					Str:            "The Black Knight",
 					Index:          0,
 					MatchedIndexes: []int{0, 10},
 					score:          16,
@@ -152,7 +146,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			fmt.Printf("Matching '%v' in Unreal 4... found %v matches in %v\n", c.pattern, len(matches), elapsed)
 			foundfilenames := make([]string, 0)
 			for i := 0; i < c.numMatches; i++ {
-				foundfilenames = append(foundfilenames, matches[i].Str)
+				foundfilenames = append(foundfilenames, filenames[matches[i].Index])
 			}
 			if diff := pretty.Compare(c.filenames, foundfilenames); diff != "" {
 				t.Errorf("%v", diff)
@@ -202,7 +196,7 @@ func TestFindWithRealworldData(t *testing.T) {
 				t.Fatal("Too few matches")
 			}
 			for i := 0; i < c.numMatches; i++ {
-				foundfilenames = append(foundfilenames, matches[i].Str)
+				foundfilenames = append(foundfilenames, filenames[matches[i].Index])
 			}
 			if diff := pretty.Compare(c.filenames, foundfilenames); diff != "" {
 				t.Errorf("%v", diff)
