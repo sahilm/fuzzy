@@ -94,6 +94,17 @@ func TestFindWithCannedData(t *testing.T) {
 		{
 			"", []string{"cat"}, []Match{},
 		},
+		// separator bonus
+		{
+			"abcx", []string{"abc\\x"}, []Match{
+				{
+					Str:            "abc\\x",
+					Index:          0,
+					MatchedIndexes: []int{0, 1, 2, 4},
+					score:          49,
+				},
+			},
+		},
 	}
 	for _, c := range cases {
 		matches := Find(c.pattern, c.data)

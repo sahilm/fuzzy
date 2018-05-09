@@ -32,7 +32,7 @@ const (
 	maxUnmatchedLeadingCharPenalty = -15
 )
 
-var separators = []rune("/-_ .")
+var separators = []rune("/-_ .\\")
 
 // Matches is a slice of Match structs
 type Matches []Match
