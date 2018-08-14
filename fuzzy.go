@@ -41,19 +41,21 @@ func (a Matches) Len() int           { return len(a) }
 func (a Matches) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a Matches) Less(i, j int) bool { return a[i].score >= a[j].score }
 
-// Abstract source of a list of strings
+// Source represents an abstract source of a list of strings
 type Source interface {
 	String(i int) string
 	Len() int
 }
 
-// List of strings as a Source
+// StringSource is a list of strings as a Source
 type StringSource []string
 
+// String implementation for list of strings
 func (ss StringSource) String(i int) string {
 	return ss[i]
 }
 
+// Len implementation for list of strings
 func (ss StringSource) Len() int { return len(ss) }
 
 /*
@@ -78,6 +80,10 @@ func Find(pattern string, data []string) Matches {
 	return FindFrom(pattern, StringSource(data))
 }
 
+/*
+FindFrom is an alternative implementation of Find using a Source
+instead of a list of strings.
+*/
 func FindFrom(pattern string, data Source) Matches {
 	if len(pattern) == 0 {
 		return nil
