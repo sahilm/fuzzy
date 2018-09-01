@@ -1,7 +1,9 @@
-package fuzzy
+package fuzzy_test
 
 import (
 	"testing"
+
+	"github.com/sahilm/fuzzy"
 
 	"io/ioutil"
 	"strings"
@@ -13,9 +15,9 @@ import (
 )
 
 func TestFindWithUnicode(t *testing.T) {
-	matches := Find("\U0001F41D", []string{"\U0001F41D"})
+	matches := fuzzy.Find("\U0001F41D", []string{"\U0001F41D"})
 	if len(matches) != 1 {
-		t.Errorf("got %v matches; expected 1 match", len(matches))
+		t.Errorf("got %v Matches; expected 1 match", len(matches))
 	}
 }
 
@@ -23,93 +25,93 @@ func TestFindWithCannedData(t *testing.T) {
 	cases := []struct {
 		pattern string
 		data    []string
-		matches []Match
+		matches []fuzzy.Match
 	}{
 		// first char bonus, camel case bonuses and unmatched chars penalty
 		// (m = 10, n = 20, r = 20) - 18 unmatched chars = 32
 		{
-			"mnr", []string{"moduleNameResolver.ts"}, []Match{
+			"mnr", []string{"moduleNameResolver.ts"}, []fuzzy.Match{
 				{
 					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
-					score:          32,
+					Score:          32,
 				},
 			},
 		},
 		{
-			"mmt", []string{"mémeTemps"}, []Match{
+			"mmt", []string{"mémeTemps"}, []fuzzy.Match{
 				{
 					Str:            "mémeTemps",
 					Index:          0,
 					MatchedIndexes: []int{0, 3, 5},
-					score:          23,
+					Score:          23,
 				},
 			},
 		},
 		// ranking
 		{
-			"mnr", []string{"moduleNameResolver.ts", "my name is_Ramsey"}, []Match{
+			"mnr", []string{"moduleNameResolver.ts", "my name is_Ramsey"}, []fuzzy.Match{
 				{
 					Str:            "my name is_Ramsey",
 					Index:          1,
 					MatchedIndexes: []int{0, 3, 11},
-					score:          36,
+					Score:          36,
 				},
 				{
 					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
-					score:          32,
+					Score:          32,
 				},
 			},
 		},
 		// simple repeated pattern and adjacent match bonus
 		{
-			"aaa", []string{"aaa", "bbb"}, []Match{
+			"aaa", []string{"aaa", "bbb"}, []fuzzy.Match{
 				{
 					Str:            "aaa",
 					Index:          0,
 					MatchedIndexes: []int{0, 1, 2},
-					score:          30,
+					Score:          30,
 				},
 			},
 		},
 		// exhaustive matching
 		{
-			"tk", []string{"The Black Knight"}, []Match{
+			"tk", []string{"The Black Knight"}, []fuzzy.Match{
 				{
 					Str:            "The Black Knight",
 					Index:          0,
 					MatchedIndexes: []int{0, 10},
-					score:          16,
+					Score:          16,
 				},
 			},
 		},
 		// any unmatched char in the pattern removes the whole match
 		{
-			"cats", []string{"cat"}, []Match{},
+			"cats", []string{"cat"}, []fuzzy.Match{},
 		},
-		// empty patterns return no matches
+		// empty patterns return no Matches
 		{
-			"", []string{"cat"}, []Match{},
+			"", []string{"cat"}, []fuzzy.Match{},
 		},
 		// separator bonus
 		{
-			"abcx", []string{"abc\\x"}, []Match{
+			"abcx", []string{"abc\\x"}, []fuzzy.Match{
 				{
 					Str:            "abc\\x",
 					Index:          0,
 					MatchedIndexes: []int{0, 1, 2, 4},
-					score:          49,
+					Score:          49,
 				},
 			},
 		},
 	}
 	for _, c := range cases {
-		matches := Find(c.pattern, c.data)
+		matches := fuzzy.Find(c.pattern, c.data)
 		if len(matches) != len(c.matches) {
-			t.Errorf("got %v matches; expected %v match", len(matches), len(c.matches))
+			t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
 		}
 		if diff := pretty.Compare(c.matches, matches); diff != "" {
 			t.Errorf("%v", diff)
@@ -158,9 +160,9 @@ func TestFindWithRealworldData(t *testing.T) {
 
 		for _, c := range cases {
 			now := time.Now()
-			matches := Find(c.pattern, filenames)
+			matches := fuzzy.Find(c.pattern, filenames)
 			elapsed := time.Since(now)
-			fmt.Printf("Matching '%v' in Unreal 4... found %v matches in %v\n", c.pattern, len(matches), elapsed)
+			fmt.Printf("Matching '%v' in Unreal 4... found %v Matches in %v\n", c.pattern, len(matches), elapsed)
 			foundfilenames := make([]string, 0)
 			for i := 0; i < c.numMatches; i++ {
 				foundfilenames = append(foundfilenames, matches[i].Str)
@@ -205,12 +207,12 @@ func TestFindWithRealworldData(t *testing.T) {
 
 		for _, c := range cases {
 			now := time.Now()
-			matches := Find(c.pattern, filenames)
+			matches := fuzzy.Find(c.pattern, filenames)
 			elapsed := time.Since(now)
-			fmt.Printf("Matching '%v' in linux kernel... found %v matches in %v\n", c.pattern, len(matches), elapsed)
+			fmt.Printf("Matching '%v' in linux kernel... found %v Matches in %v\n", c.pattern, len(matches), elapsed)
 			foundfilenames := make([]string, 0)
 			if len(matches) < c.numMatches {
-				t.Fatal("Too few matches")
+				t.Fatal("Too few Matches")
 			}
 			for i := 0; i < c.numMatches; i++ {
 				foundfilenames = append(foundfilenames, matches[i].Str)
@@ -232,7 +234,7 @@ func BenchmarkFind(b *testing.B) {
 		filenames := strings.Split(string(bytes), "\n")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			Find("lll", filenames)
+			fuzzy.Find("lll", filenames)
 		}
 	})
 
@@ -244,7 +246,7 @@ func BenchmarkFind(b *testing.B) {
 		filenames := strings.Split(string(bytes), "\n")
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			Find("alsa", filenames)
+			fuzzy.Find("alsa", filenames)
 		}
 	})
 }

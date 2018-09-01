@@ -20,7 +20,7 @@ type Match struct {
 	// The indexes of matched characters. Useful for highlighting matches.
 	MatchedIndexes []int
 	// Score used to rank matches
-	score int
+	Score int
 }
 
 const (
@@ -39,7 +39,7 @@ type Matches []Match
 
 func (a Matches) Len() int           { return len(a) }
 func (a Matches) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a Matches) Less(i, j int) bool { return a[i].score >= a[j].score }
+func (a Matches) Less(i, j int) bool { return a[i].Score >= a[j].Score }
 
 // Source represents an abstract source of a list of strings
 type Source interface {
@@ -47,16 +47,13 @@ type Source interface {
 	Len() int
 }
 
-// StringSource is a list of strings as a Source
-type StringSource []string
+type stringSource []string
 
-// String implementation for list of strings
-func (ss StringSource) String(i int) string {
+func (ss stringSource) String(i int) string {
 	return ss[i]
 }
 
-// Len implementation for list of strings
-func (ss StringSource) Len() int { return len(ss) }
+func (ss stringSource) Len() int { return len(ss) }
 
 /*
 Find looks up pattern in data and returns matches
@@ -77,7 +74,7 @@ Penalties are applied for every character in the search string that wasn't match
 characters upto the first match.
 */
 func Find(pattern string, data []string) Matches {
-	return FindFrom(pattern, StringSource(data))
+	return FindFrom(pattern, stringSource(data))
 }
 
 /*
@@ -160,7 +157,7 @@ func FindFrom(pattern string, data Source) Matches {
 						penalty := matchedIndex * unmatchedLeadingCharPenalty
 						bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
 					}
-					match.score += bestScore
+					match.Score += bestScore
 					match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
 					score = 0
 					bestScore = -1
@@ -172,7 +169,7 @@ func FindFrom(pattern string, data Source) Matches {
 		}
 		// apply penalty for each unmatched character
 		penalty := len(match.MatchedIndexes) - len(data.String(i))
-		match.score += penalty
+		match.Score += penalty
 		if len(match.MatchedIndexes) == len(runes) {
 			matches = append(matches, match)
 			matchedIndexes = nil
