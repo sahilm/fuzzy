@@ -119,6 +119,51 @@ func TestFindWithCannedData(t *testing.T) {
 	}
 }
 
+type employee struct {
+	name string
+}
+
+type employees []employee
+
+func (e employees) String(i int) string {
+	return e[i].name
+}
+
+func (e employees) Len() int {
+	return len(e)
+}
+
+func TestFindFromSource(t *testing.T) {
+	emps := employees{
+		{
+			name: "Alice",
+		},
+		{
+			name: "Bob",
+		},
+		{
+			name: "Allie",
+		},
+	}
+	want := fuzzy.Matches{
+		{
+			Str:            "Allie",
+			Index:          2,
+			MatchedIndexes: []int{0, 1},
+			Score:          12,
+		}, {
+			Str:            "Alice",
+			Index:          0,
+			MatchedIndexes: []int{0, 1},
+			Score:          12,
+		},
+	}
+	got := fuzzy.FindFrom("al", emps)
+	if diff := pretty.Compare(want, got); diff != "" {
+		t.Errorf("%v", diff)
+	}
+}
+
 func TestFindWithRealworldData(t *testing.T) {
 	t.Run("with unreal 4 file names", func(t *testing.T) {
 		cases := []struct {

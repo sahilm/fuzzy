@@ -41,9 +41,13 @@ func (a Matches) Len() int           { return len(a) }
 func (a Matches) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a Matches) Less(i, j int) bool { return a[i].Score >= a[j].Score }
 
-// Source represents an abstract source of a list of strings
+// Source represents an abstract source of a list of strings. Source must be iterable type such as a slice.
+// The source will be iterated over till Len() with String(i) being called for each element where i is the
+// index of the element. You can find a working example in the README.
 type Source interface {
+	// The string to be matched at position i.
 	String(i int) string
+	// The length of the source. Typically is the length of the slice of things that you want to match.
 	Len() int
 }
 
