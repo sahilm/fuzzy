@@ -76,7 +76,7 @@ func contains(needle int, haystack []int) bool {
 	return false
 }
 ``` 
-If the data you want to match isn't a slice of strings, you can use `FindFromSource` by implementing
+If the data you want to match isn't a slice of strings, you can use `FindFrom` by implementing
 the provided `Source` interface. Here's an example:
 
 ```go
