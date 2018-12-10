@@ -119,7 +119,9 @@ func main() {
 		},
 	}
 	results := fuzzy.FindFrom("al", emps)
-	fmt.Println(results)
+	for _, r := range results {
+		fmt.Println(emps[r.Index])
+	}
 }
 ```
 
