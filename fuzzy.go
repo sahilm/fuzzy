@@ -94,7 +94,7 @@ func Find(pattern string, data []string) Matches {
 	return FindFrom(pattern, stringSource(data))
 }
 
-// Same as Find but takes *interface{} array, uses fmt.Sprint to get string value
+// FindInterface is same as Find but takes *interface{} array, uses fmt.Sprint to get string value
 func FindInterface(pattern string, data []*interface{}) Matches {
 	return FindFrom(pattern, interfaceSource(data))
 }
