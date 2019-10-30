@@ -17,7 +17,7 @@ VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only d
 
 - Speed. Matches are returned in milliseconds. It's perfect for interactive search boxes.
 
-- The positions of matches is returned. Allows you to highlight matching characters.
+- The positions of matches are returned. Allows you to highlight matching characters.
 
 - Unicode aware.
 
