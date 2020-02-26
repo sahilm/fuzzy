@@ -1,0 +1,7 @@
+	syntax = "proto2";
+	package fuzzy;
+
+	message FindArgs {
+	  required string pattern = 1;
+	  repeated string datas = 2;
+	}
