@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/jroimartin/gocui"
-	"github.com/sahilm/fuzzy"
+	"github.com/teal-finance/fuzzy"
 )
 
 var filenamesBytes []byte

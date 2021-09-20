@@ -2,7 +2,7 @@
 
 # fuzzy
 [![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
-[![Documentation](https://godoc.org/github.com/sahilm/fuzzy?status.svg)](https://godoc.org/github.com/sahilm/fuzzy)
+[![Documentation](https://godoc.org/github.com/teal-finance/fuzzy?status.svg)](https://godoc.org/github.com/teal-finance/fuzzy)
 
 Go library that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
 VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only depends on the Go standard library.
@@ -45,7 +45,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/sahilm/fuzzy"
+	"github.com/teal-finance/fuzzy"
 )
 
 func main() {
@@ -85,7 +85,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/sahilm/fuzzy"
+	"github.com/teal-finance/fuzzy"
 )
 
 type employee struct {
@@ -125,11 +125,11 @@ func main() {
 }
 ```
 
-Check out the [godoc](https://godoc.org/github.com/sahilm/fuzzy) for detailed documentation.
+Check out the [godoc](https://godoc.org/github.com/teal-finance/fuzzy) for detailed documentation.
 
 ## Installation
 
-`go get github.com/sahilm/fuzzy` or use your favorite dependency management tool.
+`go get github.com/teal-finance/fuzzy` or use your favorite dependency management tool.
 
 ## Speed
 
@@ -165,6 +165,7 @@ The design is licensed under the Creative Commons 3.0 Attributions license.
 The MIT License (MIT)
 
 Copyright (c) 2017 Sahil Muthoo
+Copyright (c) 2021 Teal.Finance contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -183,4 +184,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
