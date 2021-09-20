@@ -11,6 +11,10 @@ import (
 	"unicode/utf8"
 )
 
+//go:generate go install google.golang.org/protobuf/proto
+//go:generate go install google.golang.org/protobuf/cmd/protoc-gen-go
+//go:generate protoc --go_out=. ./fuzzy.proto
+
 // Match represents a matched string.
 type Match struct {
 	// The matched string.
