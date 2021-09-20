@@ -1,5 +1,9 @@
-module github.com/sahilm/fuzzy
+module github.com/teal-finance/fuzzy
 
-go 1.13
+go 1.16
 
-require github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
+require (
+	github.com/golang/protobuf v1.5.2
+	github.com/kylelemons/godebug v1.1.0
+	google.golang.org/protobuf v1.27.1
+)
