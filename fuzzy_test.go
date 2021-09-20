@@ -228,7 +228,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			now := time.Now()
 			matches := fuzzy.Find(c.pattern, filenames)
 			elapsed := time.Since(now)
-			fmt.Printf("Matching '%v' in Unreal 4... found %v Matches in %v\n", c.pattern, len(matches), elapsed)
+			t.Logf("Matching '%v' in Unreal 4... found %v Matches in %v\n", c.pattern, len(matches), elapsed)
 			foundfilenames := make([]string, 0)
 			for i := 0; i < c.numMatches; i++ {
 				foundfilenames = append(foundfilenames, matches[i].Str)
@@ -275,7 +275,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			now := time.Now()
 			matches := fuzzy.Find(c.pattern, filenames)
 			elapsed := time.Since(now)
-			fmt.Printf("Matching '%v' in linux kernel... found %v Matches in %v\n", c.pattern, len(matches), elapsed)
+			t.Logf("Matching '%v' in linux kernel... found %v Matches in %v\n", c.pattern, len(matches), elapsed)
 			foundfilenames := make([]string, 0)
 			if len(matches) < c.numMatches {
 				t.Fatal("Too few Matches")
@@ -288,7 +288,6 @@ func TestFindWithRealworldData(t *testing.T) {
 			}
 		}
 	})
-
 }
 
 func BenchmarkFind(b *testing.B) {

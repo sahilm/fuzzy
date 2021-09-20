@@ -36,9 +36,11 @@ const (
 	maxUnmatchedLeadingCharPenalty = -15
 )
 
-var separators = []rune("/-_ .\\")
+func separators() []rune {
+	return []rune("/-_ .\\")
+}
 
-// Matches is a slice of Match structs
+// Matches is a slice of Match structs.
 type Matches []Match
 
 func (a Matches) Len() int           { return len(a) }
@@ -170,7 +172,6 @@ func FindFrom(pattern string, data Source) Matches {
 					}
 					match.Score += bestScore
 					match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
-					score = 0
 					bestScore = -1
 					patternIndex++
 				}
@@ -189,10 +190,11 @@ func FindFrom(pattern string, data Source) Matches {
 		}
 	}
 	sort.Stable(matches)
+
 	return matches
 }
 
-// Taken from strings.EqualFold
+// Taken from strings.EqualFold.
 func equalFold(tr, sr rune) bool {
 	if tr == sr {
 		return true
@@ -206,6 +208,7 @@ func equalFold(tr, sr rune) bool {
 		if 'A' <= sr && sr <= 'Z' && tr == sr+'a'-'A' {
 			return true
 		}
+
 		return false
 	}
 
@@ -215,6 +218,7 @@ func equalFold(tr, sr rune) bool {
 	for r != sr && r < tr {
 		r = unicode.SimpleFold(r)
 	}
+
 	return r == tr
 }
 
@@ -222,15 +226,17 @@ func adjacentCharBonus(i int, lastMatch int, currentBonus int) int {
 	if lastMatch == i {
 		return currentBonus*2 + adjacentMatchBonus
 	}
+
 	return 0
 }
 
 func isSeparator(s rune) bool {
-	for _, sep := range separators {
+	for _, sep := range separators() {
 		if s == sep {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -238,5 +244,6 @@ func max(x int, y int) int {
 	if x > y {
 		return x
 	}
+
 	return y
 }
