@@ -92,9 +92,12 @@ func FindFrom(pattern string, data Source) Matches {
 	runes := []rune(pattern)
 	var matches Matches
 	var matchedIndexes []int
-	for i := 0; i < data.Len(); i++ {
+	dataLen := data.Len()
+	for i := 0; i < dataLen; i++ {
 		var match Match
-		match.Str = data.String(i)
+		str := data.String(i)
+		strLen := len(str)
+		match.Str = str
 		match.Index = i
 		if matchedIndexes != nil {
 			match.MatchedIndexes = matchedIndexes
@@ -108,10 +111,10 @@ func FindFrom(pattern string, data Source) Matches {
 		currAdjacentMatchBonus := 0
 		var last rune
 		var lastIndex int
-		nextc, nextSize := utf8.DecodeRuneInString(data.String(i))
+		nextc, nextSize := utf8.DecodeRuneInString(str)
 		var candidate rune
 		var candidateSize int
-		for j := 0; j < len(data.String(i)); j += candidateSize {
+		for j := 0; j < strLen; j += candidateSize {
 			candidate, candidateSize = nextc, nextSize
 			if patternIndex < len(runes) && equalFold(candidate, runes[patternIndex]) {
 				score = 0
@@ -141,11 +144,11 @@ func FindFrom(pattern string, data Source) Matches {
 			if patternIndex < len(runes)-1 {
 				nextp = runes[patternIndex+1]
 			}
-			if j+candidateSize < len(data.String(i)) {
-				if data.String(i)[j+candidateSize] < utf8.RuneSelf { // Fast path for ASCII
-					nextc, nextSize = rune(data.String(i)[j+candidateSize]), 1
+			if j+candidateSize < strLen {
+				if str[j+candidateSize] < utf8.RuneSelf { // Fast path for ASCII
+					nextc, nextSize = rune(str[j+candidateSize]), 1
 				} else {
-					nextc, nextSize = utf8.DecodeRuneInString(data.String(i)[j+candidateSize:])
+					nextc, nextSize = utf8.DecodeRuneInString(str[j+candidateSize:])
 				}
 			} else {
 				nextc, nextSize = 0, 0
@@ -172,7 +175,7 @@ func FindFrom(pattern string, data Source) Matches {
 			last = candidate
 		}
 		// apply penalty for each unmatched character
-		penalty := len(match.MatchedIndexes) - len(data.String(i))
+		penalty := len(match.MatchedIndexes) - strLen
 		match.Score += penalty
 		if len(match.MatchedIndexes) == len(runes) {
 			matches = append(matches, match)
