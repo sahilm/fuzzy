@@ -1,18 +1,39 @@
 package fuzzy_test
 
 import (
-	"testing"
-
-	"github.com/sahilm/fuzzy"
-
 	"io/ioutil"
 	"strings"
-
-	"fmt"
+	"testing"
 	"time"
 
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/teal-finance/fuzzy"
+	"google.golang.org/protobuf/proto"
 )
+
+func FuzzFuzzyFind(data []byte) int {
+	args := &fuzzy.FindArgs{
+		Pattern: new(string),
+		Datas:   []string{},
+	}
+	err := proto.Unmarshal(data, args)
+	if err != nil {
+		return 0
+	}
+	matches := fuzzy.Find(*args.Pattern, args.Datas)
+	for _, match := range matches {
+		for i := 0; i < len(match.Str); i++ {
+			for _, j := range match.MatchedIndexes {
+				if j == i {
+					// fmt.Printf("found %#+v\n", match)
+					break
+				}
+			}
+		}
+	}
+
+	return 1
+}
 
 func TestFindWithUnicode(t *testing.T) {
 	matches := fuzzy.Find("\U0001F41D", []string{"\U0001F41D"})
