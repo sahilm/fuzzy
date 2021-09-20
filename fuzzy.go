@@ -113,7 +113,7 @@ func FindFrom(pattern string, data Source) Matches {
 		var candidateSize int
 		for j := 0; j < len(data.String(i)); j += candidateSize {
 			candidate, candidateSize = nextc, nextSize
-			if equalFold(candidate, runes[patternIndex]) {
+			if patternIndex < len(runes) && equalFold(candidate, runes[patternIndex]) {
 				score = 0
 				if j == 0 {
 					score += firstCharMatchBonus
