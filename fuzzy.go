@@ -34,13 +34,10 @@ const (
 	adjacentMatchBonus             = 5
 	unmatchedLeadingCharPenalty    = -5
 	maxUnmatchedLeadingCharPenalty = -15
+	separators                     = `/-_ .\`
 )
 
-func separators() []rune {
-	return []rune("/-_ .\\")
-}
-
-// Matches is a slice of Match structs.
+// Matches is a slice of Match structures.
 type Matches []Match
 
 func (a Matches) Len() int           { return len(a) }
@@ -57,13 +54,14 @@ type Source interface {
 	Len() int
 }
 
-type stringSource []string
+// StringSource is a simple implementation of the Source interface.
+type StringSource []string
 
-func (ss stringSource) String(i int) string {
+func (ss StringSource) String(i int) string {
 	return ss[i]
 }
 
-func (ss stringSource) Len() int { return len(ss) }
+func (ss StringSource) Len() int { return len(ss) }
 
 /*
 Find looks up pattern in data and returns matches
@@ -81,108 +79,29 @@ The following types of matches apply a bonus:
 * The matched character is adjacent to a previous match.
 
 Penalties are applied for every character in the search string that wasn't matched and all leading
-characters upto the first match.
+characters up to the first match.
 */
-func Find(pattern string, data []string) Matches {
-	return FindFrom(pattern, stringSource(data))
-}
-
-/*
-FindFrom is an alternative implementation of Find using a Source
-instead of a list of strings.
-*/
-func FindFrom(pattern string, data Source) Matches {
-	if len(pattern) == 0 {
+func Find(in string, dictionary []string) Matches {
+	if len(in) == 0 {
 		return nil
 	}
-	runes := []rune(pattern)
+
+	runes := []rune(in)
 	var matches Matches
 	var matchedIndexes []int
-	dataLen := data.Len()
-	for i := 0; i < dataLen; i++ {
-		var match Match
-		str := data.String(i)
-		strLen := len(str)
-		match.Str = str
-		match.Index = i
-		if matchedIndexes != nil {
-			match.MatchedIndexes = matchedIndexes
-		} else {
+
+	for i := 0; i < len(dictionary); i++ {
+		match := Match{
+			Str:            dictionary[i],
+			Index:          i,
+			MatchedIndexes: matchedIndexes,
+			Score:          0,
+		}
+		if matchedIndexes == nil {
 			match.MatchedIndexes = make([]int, 0, len(runes))
 		}
-		var score int
-		patternIndex := 0
-		bestScore := -1
-		matchedIndex := -1
-		currAdjacentMatchBonus := 0
-		var last rune
-		var lastIndex int
-		nextc, nextSize := utf8.DecodeRuneInString(str)
-		var candidate rune
-		var candidateSize int
-		for j := 0; j < strLen; j += candidateSize {
-			candidate, candidateSize = nextc, nextSize
-			if patternIndex < len(runes) && equalFold(candidate, runes[patternIndex]) {
-				score = 0
-				if j == 0 {
-					score += firstCharMatchBonus
-				}
-				if unicode.IsLower(last) && unicode.IsUpper(candidate) {
-					score += camelCaseMatchBonus
-				}
-				if j != 0 && isSeparator(last) {
-					score += matchFollowingSeparatorBonus
-				}
-				if len(match.MatchedIndexes) > 0 {
-					lastMatch := match.MatchedIndexes[len(match.MatchedIndexes)-1]
-					bonus := adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
-					score += bonus
-					// adjacent matches are incremental and keep increasing based on previous adjacent matches
-					// thus we need to maintain the current match bonus
-					currAdjacentMatchBonus += bonus
-				}
-				if score > bestScore {
-					bestScore = score
-					matchedIndex = j
-				}
-			}
-			var nextp rune
-			if patternIndex < len(runes)-1 {
-				nextp = runes[patternIndex+1]
-			}
-			if j+candidateSize < strLen {
-				if str[j+candidateSize] < utf8.RuneSelf { // Fast path for ASCII
-					nextc, nextSize = rune(str[j+candidateSize]), 1
-				} else {
-					nextc, nextSize = utf8.DecodeRuneInString(str[j+candidateSize:])
-				}
-			} else {
-				nextc, nextSize = 0, 0
-			}
-			// We apply the best score when we have the next match coming up or when the search string has ended.
-			// Tracking when the next match is coming up allows us to exhaustively find the best match and not necessarily
-			// the first match.
-			// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
-			// to match the second k thus giving this string a higher score.
-			if equalFold(nextp, nextc) || nextc == 0 {
-				if matchedIndex > -1 {
-					if len(match.MatchedIndexes) == 0 {
-						penalty := matchedIndex * unmatchedLeadingCharPenalty
-						bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
-					}
-					match.Score += bestScore
-					match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
-					bestScore = -1
-					patternIndex++
-				}
-			}
-			lastIndex = j
-			last = candidate
-		}
-		// apply penalty for each unmatched character
-		penalty := len(match.MatchedIndexes) - strLen
-		match.Score += penalty
-		if len(match.MatchedIndexes) == len(runes) {
+
+		if match.Compare(runes) {
 			matches = append(matches, match)
 			matchedIndexes = nil
 		} else {
@@ -194,35 +113,168 @@ func FindFrom(pattern string, data Source) Matches {
 	return matches
 }
 
-// Taken from strings.EqualFold.
-func equalFold(tr, sr rune) bool {
-	if tr == sr {
-		return true
+// FindFrom is an alternative implementation of Find
+// using a Source instead of a slice of strings.
+func FindFrom(pattern string, dictionary Source) Matches {
+	if len(pattern) == 0 {
+		return nil
 	}
-	if tr < sr {
-		tr, sr = sr, tr
-	}
-	// Fast check for ASCII.
-	if tr < utf8.RuneSelf {
-		// ASCII, and sr is upper case.  tr must be lower case.
-		if 'A' <= sr && sr <= 'Z' && tr == sr+'a'-'A' {
-			return true
+
+	runes := []rune(pattern)
+	var matches Matches
+	var matchedIndexes []int
+
+	dataLen := dictionary.Len()
+	for i := 0; i < dataLen; i++ {
+		match := Match{
+			Str:            dictionary.String(i),
+			Index:          i,
+			MatchedIndexes: matchedIndexes,
+			Score:          0,
+		}
+		if matchedIndexes == nil {
+			match.MatchedIndexes = make([]int, 0, len(runes))
 		}
 
-		return false
+		if match.Compare(runes) {
+			matches = append(matches, match)
+			matchedIndexes = nil
+		} else {
+			matchedIndexes = match.MatchedIndexes[:0] // Recycle match index slice
+		}
+	}
+	sort.Stable(matches)
+
+	return matches
+}
+
+// Compare computes the matching between input and target.
+func Compare(in, target string) *Match {
+	match := Match{
+		Str:            target,
+		Index:          0,
+		MatchedIndexes: nil,
+		Score:          0,
+	}
+
+	if match.Compare([]rune(in)) {
+		return &match
+	}
+
+	return nil
+}
+
+// Compare computes the matching between input and target.
+func (match *Match) Compare(inRunes []rune) bool {
+	var score int
+	inRunesIndex := 0
+	bestScore := -1
+	matchedIndex := -1
+	currAdjacentMatchBonus := 0
+	var last rune
+	var lastIndex int
+	nextTargetRune, nextSize := utf8.DecodeRuneInString(match.Str)
+	var candidate rune
+	var candidateSize int
+
+	for i := 0; i < len(match.Str); i += candidateSize {
+		candidate, candidateSize = nextTargetRune, nextSize
+		if inRunesIndex < len(inRunes) && equalFold(candidate, inRunes[inRunesIndex]) {
+			score = 0
+			if i == 0 {
+				score += firstCharMatchBonus
+			}
+			if unicode.IsLower(last) && unicode.IsUpper(candidate) {
+				score += camelCaseMatchBonus
+			}
+			if i != 0 && isSeparator(last) {
+				score += matchFollowingSeparatorBonus
+			}
+			if len(match.MatchedIndexes) > 0 {
+				lastMatch := match.MatchedIndexes[len(match.MatchedIndexes)-1]
+				bonus := adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
+				score += bonus
+				// adjacent matches are incremental and keep increasing based on previous adjacent matches
+				// thus we need to maintain the current match bonus
+				currAdjacentMatchBonus += bonus
+			}
+			if score > bestScore {
+				bestScore = score
+				matchedIndex = i
+			}
+		}
+
+		var nextInRune rune
+		if inRunesIndex < len(inRunes)-1 {
+			nextInRune = inRunes[inRunesIndex+1]
+		}
+
+		if i+candidateSize < len(match.Str) {
+			if match.Str[i+candidateSize] < utf8.RuneSelf { // Fast path for ASCII
+				nextTargetRune, nextSize = rune(match.Str[i+candidateSize]), 1
+			} else {
+				nextTargetRune, nextSize = utf8.DecodeRuneInString(match.Str[i+candidateSize:])
+			}
+		} else {
+			nextTargetRune, nextSize = 0, 0
+		}
+
+		// We apply the best score when we have the next match coming up or when the search string has ended.
+		// Tracking when the next match is coming up allows us to exhaustively find the best match and not necessarily
+		// the first match.
+		// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
+		// to match the second k thus giving this string a higher score.
+		if equalFold(nextInRune, nextTargetRune) || nextTargetRune == 0 {
+			if matchedIndex > -1 {
+				if len(match.MatchedIndexes) == 0 {
+					penalty := matchedIndex * unmatchedLeadingCharPenalty
+					bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
+				}
+				match.Score += bestScore
+				match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
+				bestScore = -1
+				inRunesIndex++
+			}
+		}
+
+		lastIndex = i
+		last = candidate
+	}
+
+	// apply penalty for each unmatched character
+	penalty := len(match.MatchedIndexes) - len(match.Str)
+	match.Score += penalty
+
+	return len(match.MatchedIndexes) == len(inRunes)
+}
+
+// Taken from strings.EqualFold.
+func equalFold(inRune, targetRune rune) bool {
+	if inRune == targetRune {
+		return true
+	}
+
+	if inRune < targetRune {
+		inRune, targetRune = targetRune, inRune
+	}
+
+	// Fast check for ASCII.
+	if inRune < utf8.RuneSelf {
+		// if targetRune is upper case. inRune must be lower case.
+		return targetRune <= 'Z' && 'A' <= targetRune && inRune == targetRune+'a'-'A'
 	}
 
 	// General case. SimpleFold(x) returns the next equivalent rune > x
 	// or wraps around to smaller values.
-	r := unicode.SimpleFold(sr)
-	for r != sr && r < tr {
+	r := unicode.SimpleFold(targetRune)
+	for r != targetRune && r < inRune {
 		r = unicode.SimpleFold(r)
 	}
 
-	return r == tr
+	return r == inRune
 }
 
-func adjacentCharBonus(i int, lastMatch int, currentBonus int) int {
+func adjacentCharBonus(i, lastMatch, currentBonus int) int {
 	if lastMatch == i {
 		return currentBonus*2 + adjacentMatchBonus
 	}
@@ -231,7 +283,7 @@ func adjacentCharBonus(i int, lastMatch int, currentBonus int) int {
 }
 
 func isSeparator(s rune) bool {
-	for _, sep := range separators() {
+	for _, sep := range separators {
 		if s == sep {
 			return true
 		}
@@ -240,7 +292,7 @@ func isSeparator(s rune) bool {
 	return false
 }
 
-func max(x int, y int) int {
+func max(x, y int) int {
 	if x > y {
 		return x
 	}
