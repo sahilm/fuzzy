@@ -29,6 +29,7 @@ type Match struct {
 
 const (
 	firstCharMatchBonus            = 10
+	caseSensitiveBonus             = 3
 	matchFollowingSeparatorBonus   = 20
 	camelCaseMatchBonus            = 20
 	adjacentMatchBonus             = 5
@@ -179,8 +180,7 @@ func (match *Match) Compare(inRunes []rune) bool {
 
 	for i := 0; i < len(match.Str); i += candidateSize {
 		candidate, candidateSize = nextTargetRune, nextSize
-		if inRunesIndex < len(inRunes) && equalFold(candidate, inRunes[inRunesIndex]) {
-			score = 0
+		if score := equalRunesFold(inRunes, inRunesIndex, candidate); score > 0 {
 			if i == 0 {
 				score += firstCharMatchBonus
 			}
@@ -223,14 +223,14 @@ func (match *Match) Compare(inRunes []rune) bool {
 		// Tracking when the next match is coming up allows us to exhaustively find the best match and not necessarily
 		// the first match.
 		// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
-		// to match the second k thus giving this string a higher score.
-		if equalFold(nextInRune, nextTargetRune) || nextTargetRune == 0 {
-			if matchedIndex > -1 {
+		// to match the second k thus giving this string a higher extra.
+		if matchedIndex > -1 {
+			if extra := equalFold(nextInRune, nextTargetRune); extra > 0 {
 				if len(match.MatchedIndexes) == 0 {
 					penalty := matchedIndex * unmatchedLeadingCharPenalty
 					bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
 				}
-				match.Score += bestScore
+				match.Score += bestScore + extra
 				match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
 				bestScore = -1
 				inRunesIndex++
@@ -248,14 +248,26 @@ func (match *Match) Compare(inRunes []rune) bool {
 	return len(match.MatchedIndexes) == len(inRunes)
 }
 
+func equalRunesFold(runes []rune, index int, targetRune rune) (score int) {
+	if index >= len(runes) {
+		return 0
+	}
+
+	return equalFold(runes[index], targetRune)
+}
+
 // Taken from strings.EqualFold.
-func equalFold(inRune, targetRune rune) bool {
+func equalFold(inRune, targetRune rune) (score int) {
 	if inRune == targetRune {
-		return true
+		return caseSensitiveBonus
+	}
+
+	if targetRune == 0 {
+		return 1
 	}
 
 	if isSeparator(inRune) && isSeparator(targetRune) {
-		return true
+		return 1
 	}
 
 	if inRune < targetRune {
@@ -265,7 +277,11 @@ func equalFold(inRune, targetRune rune) bool {
 	// Fast check for ASCII.
 	if inRune < utf8.RuneSelf {
 		// if targetRune is upper case. inRune must be lower case.
-		return targetRune <= 'Z' && 'A' <= targetRune && inRune == targetRune+'a'-'A'
+		if targetRune <= 'Z' && 'A' <= targetRune && inRune == targetRune+'a'-'A' {
+			return 1
+		}
+
+		return 0
 	}
 
 	// General case. SimpleFold(x) returns the next equivalent rune > x
@@ -275,7 +291,11 @@ func equalFold(inRune, targetRune rune) bool {
 		r = unicode.SimpleFold(r)
 	}
 
-	return r == inRune
+	if r == inRune {
+		return 1
+	}
+
+	return 0
 }
 
 func adjacentCharBonus(i, lastMatch, currentBonus int) int {
