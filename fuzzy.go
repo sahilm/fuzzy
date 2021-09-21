@@ -254,6 +254,10 @@ func equalFold(inRune, targetRune rune) bool {
 		return true
 	}
 
+	if isSeparator(inRune) && isSeparator(targetRune) {
+		return true
+	}
+
 	if inRune < targetRune {
 		inRune, targetRune = targetRune, inRune
 	}
