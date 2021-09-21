@@ -58,11 +58,8 @@ type Source interface {
 // StringSource is a simple implementation of the Source interface.
 type StringSource []string
 
-func (ss StringSource) String(i int) string {
-	return ss[i]
-}
-
-func (ss StringSource) Len() int { return len(ss) }
+func (ss StringSource) String(i int) string { return ss[i] }
+func (ss StringSource) Len() int            { return len(ss) }
 
 /*
 Find looks up pattern in data and returns matches
@@ -83,45 +80,17 @@ Penalties are applied for every character in the search string that wasn't match
 characters up to the first match.
 */
 func Find(in string, dictionary []string) Matches {
+	return FindFrom(in, StringSource(dictionary))
+}
+
+// FindFrom is an alternative implementation of Find
+// using a Source instead of a slice of strings.
+func FindFrom(in string, dictionary Source) Matches {
 	if len(in) == 0 {
 		return nil
 	}
 
 	runes := []rune(in)
-	var matches Matches
-	var matchedIndexes []int
-
-	for i := 0; i < len(dictionary); i++ {
-		match := Match{
-			Str:            dictionary[i],
-			Index:          i,
-			MatchedIndexes: matchedIndexes,
-			Score:          0,
-		}
-		if matchedIndexes == nil {
-			match.MatchedIndexes = make([]int, 0, len(runes))
-		}
-
-		if match.Compare(runes) {
-			matches = append(matches, match)
-			matchedIndexes = nil
-		} else {
-			matchedIndexes = match.MatchedIndexes[:0] // Recycle match index slice
-		}
-	}
-	sort.Stable(matches)
-
-	return matches
-}
-
-// FindFrom is an alternative implementation of Find
-// using a Source instead of a slice of strings.
-func FindFrom(pattern string, dictionary Source) Matches {
-	if len(pattern) == 0 {
-		return nil
-	}
-
-	runes := []rune(pattern)
 	var matches Matches
 	var matchedIndexes []int
 
@@ -167,7 +136,6 @@ func Compare(in, target string) *Match {
 
 // Compare computes the matching between input and target.
 func (match *Match) Compare(inRunes []rune) bool {
-	var score int
 	inRunesIndex := 0
 	bestScore := -1
 	matchedIndex := -1
