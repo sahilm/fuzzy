@@ -1,19 +1,26 @@
 <img src="assets/search-gopher-1.png" alt="gopher looking for stuff">  <img src="assets/search-gopher-2.png" alt="gopher found stuff">
 
 # fuzzy
-[![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
+
+[![Build Status](https://travis-ci.org/teal-finance/fuzzy.svg?branch=master)](https://travis-ci.org/teal-finance/fuzzy)
 [![Documentation](https://godoc.org/github.com/teal-finance/fuzzy?status.svg)](https://godoc.org/github.com/teal-finance/fuzzy)
 
-Go library that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
+Go library that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text,
 VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only depends on the Go standard library.
 
 ## Features
 
-- Intuitive matching. Results are returned in descending order of match quality. Quality is determined by:
+- Intuitive matching. Quality is determined by:
   - The first character in the pattern matches the first character in the match string.
   - The matched character is camel cased.
   - The matched character follows a separator such as an underscore character.
   - The matched character is adjacent to a previous match.
+  - Favor case sensitive matching: if two similar targets mathes, the one respecting the input case has a higher score.
+  - Insensitive to the punctuations `/-_ .\` thus "BTC/USD" matches "BTC-USD".
+
+- `Find()` and `FindFrom()` return result in descending order of match quality.
+
+- `BestMatch()` and `BestMatchFrom()` return the matching having the highest score.
 
 - Speed. Matches are returned in milliseconds. It's perfect for interactive search boxes.
 
@@ -23,14 +30,14 @@ VSCode, IntelliJ IDEA et al. This library is external dependency-free. It only d
 
 ## Demo
 
-Here is a [demo](_example/main.go) of matching various patterns against ~16K files from the Unreal Engine 4 codebase.
+Here is a [demo](example/main.go) of matching various patterns against ~16K files from the Unreal Engine 4 codebase.
 
 ![demo](assets/demo.gif)
 
-You can run the demo yourself like so:
+Run the demo:
 
 ```
-cd _example/
+cd example
 go get github.com/jroimartin/gocui
 go run main.go
 ```
@@ -43,39 +50,40 @@ The following example prints out matches with the matched chars in bold.
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/teal-finance/fuzzy"
+    "github.com/teal-finance/fuzzy"
 )
 
 func main() {
-	const bold = "\033[1m%s\033[0m"
-	pattern := "mnr"
-	data := []string{"game.cpp", "moduleNameResolver.ts", "my name is_Ramsey"}
+    const bold = "\033[1m%s\033[0m"
+    pattern := "mnr"
+    data := []string{"game.cpp", "moduleNameResolver.ts", "my name is_Ramsey"}
 
-	matches := fuzzy.Find(pattern, data)
+    matches := fuzzy.Find(pattern, data)
 
-	for _, match := range matches {
-		for i := 0; i < len(match.Str); i++ {
-			if contains(i, match.MatchedIndexes) {
-				fmt.Print(fmt.Sprintf(bold, string(match.Str[i])))
-			} else {
-				fmt.Print(string(match.Str[i]))
-			}
-		}
-		fmt.Println()
-	}
+    for _, match := range matches {
+        for i := 0; i < len(match.Str); i++ {
+            if contains(i, match.MatchedIndexes) {
+                fmt.Print(fmt.Sprintf(bold, string(match.Str[i])))
+            } else {
+                fmt.Print(string(match.Str[i]))
+            }
+        }
+        fmt.Println()
+    }
 }
 
 func contains(needle int, haystack []int) bool {
-	for _, i := range haystack {
-		if needle == i {
-			return true
-		}
-	}
-	return false
+    for _, i := range haystack {
+        if needle == i {
+            return true
+        }
+    }
+    return false
 }
-``` 
+```
+
 If the data you want to match isn't a slice of strings, you can use `FindFrom` by implementing
 the provided `Source` interface. Here's an example:
 
@@ -83,89 +91,100 @@ the provided `Source` interface. Here's an example:
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/teal-finance/fuzzy"
+    "github.com/teal-finance/fuzzy"
 )
 
 type employee struct {
-	name string
-	age  int
+    name string
+    age  int
 }
 
 type employees []employee
 
 func (e employees) String(i int) string {
-	return e[i].name
+    return e[i].name
 }
 
 func (e employees) Len() int {
-	return len(e)
+    return len(e)
 }
 
 func main() {
-	emps := employees{
-		{
-			name: "Alice",
-			age:  45,
-		},
-		{
-			name: "Bob",
-			age:  35,
-		},
-		{
-			name: "Allie",
-			age:  35,
-		},
-	}
-	results := fuzzy.FindFrom("al", emps)
-	for _, r := range results {
-		fmt.Println(emps[r.Index])
-	}
+    emps := employees{
+        {
+            name: "Alice",
+            age:  45,
+        },
+        {
+            name: "Bob",
+            age:  35,
+        },
+        {
+            name: "Allie",
+            age:  35,
+        },
+    }
+    results := fuzzy.FindFrom("al", emps)
+    for _, r := range results {
+        fmt.Println(emps[r.Index])
+    }
 }
 ```
 
-Check out the [godoc](https://godoc.org/github.com/teal-finance/fuzzy) for detailed documentation.
+Check out the [godoc](https://pkg.go.dev/github.com/teal-finance/fuzzy) for detailed documentation.
 
 ## Installation
 
-`go get github.com/teal-finance/fuzzy` or use your favorite dependency management tool.
+`go get github.com/teal-finance/fuzzy`
 
 ## Speed
 
-Here are a few benchmark results on a normal laptop.
+Benchmark results on a server.
 
 ```
-BenchmarkFind/with_unreal_4_(~16K_files)-4         	     100	  12915315 ns/op
-BenchmarkFind/with_linux_kernel_(~60K_files)-4     	      50	  30885038 ns/op
+$ go test -benchmem -run=^$ -bench . github.com/teal-finance/fuzzy
+
+goos: linux
+goarch: amd64
+pkg: github.com/teal-finance/fuzzy
+cpu: AMD Ryzen 9 3900X 12-Core Processor            
+BenchmarkFind/with_unreal_4_(~16K_files)-24               204    5758452 ns/op   151752 B/op      896 allocs/op
+BenchmarkFind/with_linux_kernel_(~60K_files)-24           105   10424862 ns/op    38400 B/op      203 allocs/op
+BenchmarkBest/with_unreal_4_(~16K_files)-24               266    4114086 ns/op      200 B/op        5 allocs/op
+BenchmarkBest/with_linux_kernel_(~60K_files)-24           100   10353349 ns/op      216 B/op        5 allocs/op
+PASS
+ok   github.com/teal-finance/fuzzy 6.117s
 ```
 
 Matching a pattern against ~60K files from the Linux kernel takes about 30ms.
 
+The function `BestMatch()` is an memory-optimized version of `Find()` returning only the best match.
+
 ## Contributing
 
-Everyone is welcome to contribute. Please send me a pull request or file an issue. I promise
-to respond promptly.
+Everyone is welcome to contribute. Please send pull request or open an issue.
 
 ## Credits
 
-* [@ericpauley](https://github.com/ericpauley) & [@lunixbochs](https://github.com/lunixbochs) contributed Unicode awareness and various performance optimisations.
+- [@ericpauley](https://github.com/ericpauley) & [@lunixbochs](https://github.com/lunixbochs) contributed Unicode awareness and various performance optimisations.
 
-* The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js). 
+- The algorithm is based of the awesome work of [forrestthewoods](https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_fuzzy_match.js).
 See [this](https://blog.forrestthewoods.com/reverse-engineering-sublime-text-s-fuzzy-match-4cffeed33fdb#.d05n81yjy)
 blog post for details of the algorithm.
 
-* The artwork is by my lovely wife Sanah. It's based on the Go Gopher.
+- The artwork is by my lovely wife Sanah. It's based on the Go Gopher.
 
-* The Go gopher was designed by Renee French (http://reneefrench.blogspot.com/). 
+- The Go gopher was designed by Renee French (<http://reneefrench.blogspot.com/>).
 The design is licensed under the Creative Commons 3.0 Attributions license.
 
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2017 Sahil Muthoo
-Copyright (c) 2021 Teal.Finance contributors
+Copyright (c) 2017-2021 Sahil Muthoo and some other contributors  
+Copyright (c) 2021      Teal.Finance contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
