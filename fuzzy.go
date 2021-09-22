@@ -28,8 +28,9 @@ type Match struct {
 }
 
 const (
-	firstCharMatchBonus            = 10
+	firstCharMatchBonus            = 16
 	caseSensitiveBonus             = 3
+	penaltyUnmatched               = 2
 	matchFollowingSeparatorBonus   = 20
 	camelCaseMatchBonus            = 20
 	adjacentMatchBonus             = 5
@@ -79,47 +80,85 @@ The following types of matches apply a bonus:
 Penalties are applied for every character in the search string that wasn't matched and all leading
 characters up to the first match.
 */
-func Find(in string, dictionary []string) Matches {
-	return FindFrom(in, StringSource(dictionary))
+func Find(source string, dictionary []string) Matches {
+	return FindFrom(source, StringSource(dictionary))
+}
+
+// BestMatch is an optimized version of Find()
+// assuming input is not empty and returning the best match.
+func BestMatch(source string, dictionary []string) *Match {
+	return BestMatchFrom(source, StringSource(dictionary))
 }
 
 // FindFrom is an alternative implementation of Find
 // using a Source instead of a slice of strings.
-func FindFrom(in string, dictionary Source) Matches {
-	if len(in) == 0 {
+func FindFrom(source string, dictionary Source) (matches Matches) {
+	if source == "" {
 		return nil
 	}
 
-	runes := []rune(in)
-	var matches Matches
-	var matchedIndexes []int
+	matchedIndexes := make([]int, 0, len(source))
 
-	dataLen := dictionary.Len()
-	for i := 0; i < dataLen; i++ {
+	dicLen := dictionary.Len()
+	for i := 0; i < dicLen; i++ {
 		match := Match{
 			Str:            dictionary.String(i),
 			Index:          i,
 			MatchedIndexes: matchedIndexes,
 			Score:          0,
 		}
-		if matchedIndexes == nil {
-			match.MatchedIndexes = make([]int, 0, len(runes))
-		}
 
-		if match.Compare(runes) {
+		if match.Compare([]rune(source)) {
 			matches = append(matches, match)
-			matchedIndexes = nil
+			matchedIndexes = make([]int, 0, len(source))
 		} else {
 			matchedIndexes = match.MatchedIndexes[:0] // Recycle match index slice
 		}
 	}
+
 	sort.Stable(matches)
 
 	return matches
 }
 
-// Compare computes the matching between input and target.
-func Compare(in, target string) *Match {
+// BestMatchFrom is an optimized version of FindFrom()
+// assuming input is not empty and returning the best match.
+func BestMatchFrom(source string, dictionary Source) *Match {
+	best := &Match{
+		Str:            "",
+		Index:          0,
+		MatchedIndexes: make([]int, 0, len(source)),
+		Score:          -1,
+	}
+
+	match := &Match{
+		Str:            "",
+		Index:          0,
+		MatchedIndexes: make([]int, 0, len(source)),
+		Score:          0,
+	}
+
+	dicLen := dictionary.Len()
+	for i := 0; i < dicLen; i++ {
+		match.Str = dictionary.String(i)
+		match.MatchedIndexes = match.MatchedIndexes[:0] // Recycle match index slice
+		match.Score = 0
+
+		if match.Compare([]rune(source)) && match.Score > best.Score {
+			best, match = match, best
+			best.Index = i
+		}
+	}
+
+	if best.Score < 0 {
+		return nil
+	}
+
+	return best
+}
+
+// Compare computes the matching between two strings: source and target.
+func Compare(source, target string) *Match {
 	match := Match{
 		Str:            target,
 		Index:          0,
@@ -127,7 +166,7 @@ func Compare(in, target string) *Match {
 		Score:          0,
 	}
 
-	if match.Compare([]rune(in)) {
+	if match.Compare([]rune(source)) {
 		return &match
 	}
 
@@ -135,8 +174,8 @@ func Compare(in, target string) *Match {
 }
 
 // Compare computes the matching between input and target.
-func (match *Match) Compare(inRunes []rune) bool {
-	inRunesIndex := 0
+func (match *Match) Compare(sourceRunes []rune) bool {
+	sourceIndex := 0
 	bestScore := -1
 	matchedIndex := -1
 	currAdjacentMatchBonus := 0
@@ -148,16 +187,19 @@ func (match *Match) Compare(inRunes []rune) bool {
 
 	for i := 0; i < len(match.Str); i += candidateSize {
 		candidate, candidateSize = nextTargetRune, nextSize
-		if score := equalRunesFold(inRunes, inRunesIndex, candidate); score > 0 {
+		if score := equalRuneFold(sourceRunes, sourceIndex, candidate); score > 0 {
 			if i == 0 {
 				score += firstCharMatchBonus
 			}
+
 			if unicode.IsLower(last) && unicode.IsUpper(candidate) {
 				score += camelCaseMatchBonus
 			}
+
 			if i != 0 && isSeparator(last) {
 				score += matchFollowingSeparatorBonus
 			}
+
 			if len(match.MatchedIndexes) > 0 {
 				lastMatch := match.MatchedIndexes[len(match.MatchedIndexes)-1]
 				bonus := adjacentCharBonus(lastIndex, lastMatch, currAdjacentMatchBonus)
@@ -166,15 +208,16 @@ func (match *Match) Compare(inRunes []rune) bool {
 				// thus we need to maintain the current match bonus
 				currAdjacentMatchBonus += bonus
 			}
+
 			if score > bestScore {
 				bestScore = score
 				matchedIndex = i
 			}
 		}
 
-		var nextInRune rune
-		if inRunesIndex < len(inRunes)-1 {
-			nextInRune = inRunes[inRunesIndex+1]
+		var nextSourceRune rune
+		if sourceIndex < len(sourceRunes)-1 {
+			nextSourceRune = sourceRunes[sourceIndex+1]
 		}
 
 		if i+candidateSize < len(match.Str) {
@@ -193,7 +236,7 @@ func (match *Match) Compare(inRunes []rune) bool {
 		// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
 		// to match the second k thus giving this string a higher extra.
 		if matchedIndex > -1 {
-			if extra := equalFold(nextInRune, nextTargetRune); extra > 0 {
+			if extra := equalFold(nextSourceRune, nextTargetRune); extra > 0 {
 				if len(match.MatchedIndexes) == 0 {
 					penalty := matchedIndex * unmatchedLeadingCharPenalty
 					bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
@@ -201,7 +244,7 @@ func (match *Match) Compare(inRunes []rune) bool {
 				match.Score += bestScore + extra
 				match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
 				bestScore = -1
-				inRunesIndex++
+				sourceIndex++
 			}
 		}
 
@@ -210,13 +253,13 @@ func (match *Match) Compare(inRunes []rune) bool {
 	}
 
 	// apply penalty for each unmatched character
-	penalty := len(match.MatchedIndexes) - len(match.Str)
+	penalty := (len(match.MatchedIndexes) - len(match.Str)) * penaltyUnmatched
 	match.Score += penalty
 
-	return len(match.MatchedIndexes) == len(inRunes)
+	return len(match.MatchedIndexes) == len(sourceRunes)
 }
 
-func equalRunesFold(runes []rune, index int, targetRune rune) (score int) {
+func equalRuneFold(runes []rune, index int, targetRune rune) (score int) {
 	if index >= len(runes) {
 		return 0
 	}
@@ -225,8 +268,8 @@ func equalRunesFold(runes []rune, index int, targetRune rune) (score int) {
 }
 
 // Taken from strings.EqualFold.
-func equalFold(inRune, targetRune rune) (score int) {
-	if inRune == targetRune {
+func equalFold(sourceRune, targetRune rune) (score int) {
+	if sourceRune == targetRune {
 		return caseSensitiveBonus
 	}
 
@@ -234,18 +277,18 @@ func equalFold(inRune, targetRune rune) (score int) {
 		return 1
 	}
 
-	if isSeparator(inRune) && isSeparator(targetRune) {
+	if isSeparator(sourceRune) && isSeparator(targetRune) {
 		return 1
 	}
 
-	if inRune < targetRune {
-		inRune, targetRune = targetRune, inRune
+	if sourceRune < targetRune {
+		sourceRune, targetRune = targetRune, sourceRune
 	}
 
 	// Fast check for ASCII.
-	if inRune < utf8.RuneSelf {
-		// if targetRune is upper case. inRune must be lower case.
-		if targetRune <= 'Z' && 'A' <= targetRune && inRune == targetRune+'a'-'A' {
+	if sourceRune < utf8.RuneSelf {
+		// if targetRune is upper case. sourceRune must be lower case.
+		if targetRune <= 'Z' && 'A' <= targetRune && sourceRune == targetRune+'a'-'A' {
 			return 1
 		}
 
@@ -255,11 +298,11 @@ func equalFold(inRune, targetRune rune) (score int) {
 	// General case. SimpleFold(x) returns the next equivalent rune > x
 	// or wraps around to smaller values.
 	r := unicode.SimpleFold(targetRune)
-	for r != targetRune && r < inRune {
+	for r != targetRune && r < sourceRune {
 		r = unicode.SimpleFold(r)
 	}
 
-	if r == inRune {
+	if r == sourceRune {
 		return 1
 	}
 
