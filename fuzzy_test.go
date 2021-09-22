@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -141,9 +142,11 @@ func TestFindWithCannedData(t *testing.T) {
 			},
 		},
 	}
+
 	for _, c := range cases {
 		t.Run("sahilm.Find("+c.pattern+")", func(t *testing.T) {
 			matches := sahilm.Find(c.pattern, c.data)
+
 			if len(matches) != len(c.matches) {
 				t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
 			}
@@ -153,7 +156,13 @@ func TestFindWithCannedData(t *testing.T) {
 		})
 
 		t.Run("isacikgoz.Find("+c.pattern+")", func(t *testing.T) {
-			matches := isacikgoz.Find(context.Background(), c.pattern, c.data)
+			channel := isacikgoz.Find(context.Background(), c.pattern, c.data)
+			matches := make([]isacikgoz.Match, 0)
+			for match := range channel {
+				matches = append(matches, match)
+			}
+			sort.Stable(isacikgoz.Sortable(matches))
+
 			if len(matches) != len(c.matches) {
 				t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
 			}
@@ -162,8 +171,9 @@ func TestFindWithCannedData(t *testing.T) {
 			}
 		})
 
-		t.Run("tealfinance.Find("+c.pattern+")", func(t *testing.T) {
+		t.Run("teal.Find("+c.pattern+")", func(t *testing.T) {
 			matches := Find(c.pattern, c.data)
+
 			if len(matches) != len(c.matches) {
 				t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
 			}
@@ -172,8 +182,9 @@ func TestFindWithCannedData(t *testing.T) {
 			}
 		})
 
-		t.Run("tealfinance.Best("+c.pattern+")", func(t *testing.T) {
+		t.Run("teal.Best("+c.pattern+")", func(t *testing.T) {
 			best := BestMatch(c.pattern, c.data)
+
 			if best == nil && len(c.matches) > 0 {
 				t.Errorf("got best=%v ; expected %v match", best, len(c.matches))
 			}
@@ -238,13 +249,18 @@ func TestFindFromSource(t *testing.T) {
 	})
 
 	t.Run("isacikgoz.FindFrom", func(t *testing.T) {
-		got := isacikgoz.FindFrom(context.Background(), "al", emps)
+		channel := isacikgoz.FindFrom(context.Background(), "al", emps)
+		got := make([]isacikgoz.Match, 0)
+		for match := range channel {
+			got = append(got, match)
+		}
+		sort.Stable(isacikgoz.Sortable(got))
 		if diff := pretty.Compare(want, got); diff != "" {
 			t.Errorf("%v", diff)
 		}
 	})
 
-	t.Run("tealfinance.FindFrom", func(t *testing.T) {
+	t.Run("teal.FindFrom", func(t *testing.T) {
 		got := FindFrom("al", emps)
 		if diff := pretty.Compare(want, got); diff != "" {
 			t.Errorf("%v", diff)
@@ -297,7 +313,6 @@ func TestFindWithRealworldData(t *testing.T) {
 
 			if matches == nil || len(matches) < c.numMatches {
 				t.Errorf("Got matches=%v ; want at least %v", len(matches), c.numMatches)
-
 				continue
 			}
 
@@ -381,7 +396,7 @@ func TestFindWithRealworldData(t *testing.T) {
 	})
 }
 
-func BenchmarkUnreal4Files(b *testing.B) {
+func BenchmarkUnrealFiles(b *testing.B) {
 	b.Log("~16K files from unreal 4")
 
 	bytes, err := ioutil.ReadFile("testdata/ue4_filenames.txt")
@@ -390,25 +405,30 @@ func BenchmarkUnreal4Files(b *testing.B) {
 	}
 	filenames := strings.Split(string(bytes), "\n")
 
+	b.Run("isacikgoz.Find", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			channel := isacikgoz.Find(context.Background(), "lll", filenames)
+			matches := make([]isacikgoz.Match, 0)
+			for match := range channel {
+				matches = append(matches, match)
+			}
+			sort.Stable(isacikgoz.Sortable(matches))
+		}
+	})
+
 	b.Run("sahilm.Find", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			sahilm.Find("lll", filenames)
 		}
 	})
 
-	b.Run("isacikgoz.Find", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			isacikgoz.Find(context.Background(), "lll", filenames)
-		}
-	})
-
-	b.Run("tealfinance.Find", func(b *testing.B) {
+	b.Run("teal.Find", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			Find("lll", filenames)
 		}
 	})
 
-	b.Run("tealfinance.BestMatch", func(b *testing.B) {
+	b.Run("teal.BestMatch", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			BestMatch("lll", filenames)
 		}
@@ -424,25 +444,30 @@ func BenchmarkLinuxFiles(b *testing.B) {
 	}
 	filenames := strings.Split(string(bytes), "\n")
 
+	b.Run("isacikgoz.Find", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			channel := isacikgoz.Find(context.Background(), "lll", filenames)
+			matches := make([]isacikgoz.Match, 0)
+			for match := range channel {
+				matches = append(matches, match)
+			}
+			sort.Stable(isacikgoz.Sortable(matches))
+		}
+	})
+
 	b.Run("sahilm.Find", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			sahilm.Find("lll", filenames)
 		}
 	})
 
-	b.Run("isacikgoz.Find", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			isacikgoz.Find(context.Background(), "lll", filenames)
-		}
-	})
-
-	b.Run("tealfinance.Find", func(b *testing.B) {
+	b.Run("teal.Find", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			Find("lll", filenames)
 		}
 	})
 
-	b.Run("tealfinance.BestMatch", func(b *testing.B) {
+	b.Run("teal.BestMatch", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			BestMatch("lll", filenames)
 		}
@@ -666,19 +691,23 @@ func rStr(r rune) string {
 }
 
 func Test_equalFold_range(t *testing.T) {
-	for r1 := rune(0); r1 < rune(9999); r1++ {
-		r2 := r1 + 'A' - 'a'
+	const punctuation = "[]{}|^~_" + "\\" + "\u007f"
+
+	for r1 := rune('0'); r1 < rune(9999); r1++ {
+		r2 := r1 + 'a' - 'A'
 
 		name := string(r1) + "==" + string(r2)
 		t.Run(name, func(t *testing.T) {
-			r3 := unicode.SimpleFold(r2)
-			for r3 != r2 && r3 < r1 {
+			r3 := unicode.SimpleFold(r1)
+			for r3 != r1 && r3 < r2 {
 				r3 = unicode.SimpleFold(r3)
 			}
 
 			want := 0
-			if r3 == r1 {
+			if r3 == r2 {
 				want = 1
+			} else if strings.ContainsRune(punctuation, r1) && strings.ContainsRune(punctuation, r2) {
+				return // want = 1
 			}
 
 			if testEqualFold(t, r1, r2, want) {
@@ -694,8 +723,6 @@ func Test_equalFold(t *testing.T) {
 		tr   rune
 		want int
 	}{
-		{'', -0x19, 0},
-		{0x8, -0x18, 0},
 		{'a', 'a', caseSensitiveBonus},
 		{'-', '-', caseSensitiveBonus},
 		{'3', '3', caseSensitiveBonus},
@@ -714,6 +741,16 @@ func Test_equalFold(t *testing.T) {
 		{'-', '←', 0},
 		{'-', '_', 1},
 		{'.', '↑', 0},
+		{'/', 'a', 0},
+		{'1', '_', 0},
+		{'E', '.', 0},
+		{'û', 'x', 0},
+		{'û', '*', 0},
+		{'û', ' ', 0},
+		{'à', 'a', 0},
+		{'à', 'À', 1},
+		{'ç', 'c', 0},
+		{'ç', 'Ç', 1},
 		// {')', '\\', 1},
 		// {'+', '`', 1},
 		// {'&', '_', 1},
@@ -722,6 +759,7 @@ func Test_equalFold(t *testing.T) {
 		// {',', '^', 1},
 		// {'/', '~', 1},
 		// {'\'', ']', 1},
+		// {'', '/', 1},
 	}
 
 	for _, c := range cases {
@@ -736,9 +774,13 @@ func Test_equalFold(t *testing.T) {
 
 func testEqualFold(t *testing.T, sr, tr rune, want int) bool {
 	t.Helper()
-	if got := equalFold(sr, tr); got != want {
-		t.Errorf("equalFold(%v %v) = %v, want %v", rStr(sr), rStr(tr), got, want)
 
+	if got := equalFoldOld(sr, tr); got != want {
+		t.Errorf("equalFoldOld(%v %v) = %v, want %v", rStr(sr), rStr(tr), got, want)
+	}
+
+	if got := equalFoldNew(sr, tr); got != want {
+		t.Errorf("equalFoldNew(%v %v) = %v, want %v", rStr(sr), rStr(tr), got, want)
 		return false
 	}
 

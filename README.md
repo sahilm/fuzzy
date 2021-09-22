@@ -141,21 +141,75 @@ Check out the [godoc](https://pkg.go.dev/github.com/teal-finance/fuzzy) for deta
 
 ## Speed
 
-Benchmark results on a server.
+The benchmark includes:
+1. the [forked project](https://github.com/isacikgoz/fuzzy) by @isacikgoz using Go channel (⚠️ the channel overhead slows down this bench),
+2. the [original project](https://github.com/sahilm/fuzzy) from @sahilm,
+3. the current repo, which is twice as fast as the original,
+4. the memory-optimized `BestMatch()`, 25% faster than `Find()`.
 
 ```
-$ go test -benchmem -run=^$ -bench . github.com/teal-finance/fuzzy
+$ go test -count 6 -benchmem -run=^$ -bench . github.com/teal-finance/fuzzy
 
 goos: linux
 goarch: amd64
 pkg: github.com/teal-finance/fuzzy
-cpu: AMD Ryzen 9 3900X 12-Core Processor            
-BenchmarkFind/with_unreal_4_(~16K_files)-24               204    5758452 ns/op   151752 B/op      896 allocs/op
-BenchmarkFind/with_linux_kernel_(~60K_files)-24           105   10424862 ns/op    38400 B/op      203 allocs/op
-BenchmarkBest/with_unreal_4_(~16K_files)-24               266    4114086 ns/op      200 B/op        5 allocs/op
-BenchmarkBest/with_linux_kernel_(~60K_files)-24           100   10353349 ns/op      216 B/op        5 allocs/op
-PASS
-ok   github.com/teal-finance/fuzzy 6.117s
+cpu: AMD Ryzen 9 3900X 12-Core Processor
+
+BenchmarkUnrealFiles/isacikgoz.Find-24    86   13483431 ns/op   151874 B/op   898 allocs/op
+BenchmarkUnrealFiles/isacikgoz.Find-24    87   13620413 ns/op   151875 B/op   898 allocs/op
+BenchmarkUnrealFiles/isacikgoz.Find-24    90   13537883 ns/op   151873 B/op   898 allocs/op
+BenchmarkUnrealFiles/isacikgoz.Find-24    90   13608595 ns/op   151864 B/op   898 allocs/op
+BenchmarkUnrealFiles/isacikgoz.Find-24    93   13468849 ns/op   151872 B/op   898 allocs/op
+BenchmarkUnrealFiles/isacikgoz.Find-24   100   13583070 ns/op   151875 B/op   898 allocs/op
+
+BenchmarkUnrealFiles/sahilm.Find-24      139    8147677 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/sahilm.Find-24      140    7849173 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/sahilm.Find-24      148    7483526 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/sahilm.Find-24      150    7708139 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/sahilm.Find-24      156    8012760 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/sahilm.Find-24      157    7671143 ns/op   151752 B/op   896 allocs/op
+
+BenchmarkUnrealFiles/teal.Find-24        256    4403617 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/teal.Find-24        258    4568313 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/teal.Find-24        282    4592112 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/teal.Find-24        286    4675680 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/teal.Find-24        314    4102624 ns/op   151752 B/op   896 allocs/op
+BenchmarkUnrealFiles/teal.Find-24        324    4030270 ns/op   151752 B/op   896 allocs/op
+
+BenchmarkUnrealFiles/teal.BestMatch-24   374    2683358 ns/op      200 B/op     5 allocs/op
+BenchmarkUnrealFiles/teal.BestMatch-24   376    2748506 ns/op      200 B/op     5 allocs/op
+BenchmarkUnrealFiles/teal.BestMatch-24   381    2807797 ns/op      200 B/op     5 allocs/op
+BenchmarkUnrealFiles/teal.BestMatch-24   381    2910482 ns/op      200 B/op     5 allocs/op
+BenchmarkUnrealFiles/teal.BestMatch-24   382    2844940 ns/op      200 B/op     5 allocs/op
+BenchmarkUnrealFiles/teal.BestMatch-24   390    2819916 ns/op      200 B/op     5 allocs/op
+
+BenchmarkLinuxFiles/isacikgoz.Find-24     36   29633575 ns/op    73632 B/op   368 allocs/op
+BenchmarkLinuxFiles/isacikgoz.Find-24     39   29405028 ns/op    73634 B/op   368 allocs/op
+BenchmarkLinuxFiles/isacikgoz.Find-24     39   29617157 ns/op    73632 B/op   368 allocs/op
+BenchmarkLinuxFiles/isacikgoz.Find-24     39   29922710 ns/op    73634 B/op   368 allocs/op
+BenchmarkLinuxFiles/isacikgoz.Find-24     40   29664292 ns/op    73648 B/op   368 allocs/op
+BenchmarkLinuxFiles/isacikgoz.Find-24     51   29403815 ns/op    73637 B/op   368 allocs/op
+
+BenchmarkLinuxFiles/sahilm.Find-24        70   15967443 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/sahilm.Find-24        70   16319718 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/sahilm.Find-24        72   16534890 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/sahilm.Find-24        74   16189509 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/sahilm.Find-24        79   14999524 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/sahilm.Find-24        84   16200886 ns/op    73520 B/op   366 allocs/op
+
+BenchmarkLinuxFiles/teal.Find-24         148    7276280 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/teal.Find-24         148    7726970 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/teal.Find-24         157    7592565 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/teal.Find-24         159    8123690 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/teal.Find-24         164    7334939 ns/op    73520 B/op   366 allocs/op
+BenchmarkLinuxFiles/teal.Find-24         176    7197796 ns/op    73520 B/op   366 allocs/op
+
+BenchmarkLinuxFiles/teal.BestMatch-24    177    6481958 ns/op      200 B/op     5 allocs/op
+BenchmarkLinuxFiles/teal.BestMatch-24    178    6249032 ns/op      200 B/op     5 allocs/op
+BenchmarkLinuxFiles/teal.BestMatch-24    178    6256040 ns/op      200 B/op     5 allocs/op
+BenchmarkLinuxFiles/teal.BestMatch-24    183    6444893 ns/op      200 B/op     5 allocs/op
+BenchmarkLinuxFiles/teal.BestMatch-24    190    6282288 ns/op      200 B/op     5 allocs/op
+BenchmarkLinuxFiles/teal.BestMatch-24    198    6010804 ns/op      200 B/op     5 allocs/op
 ```
 
 Matching a pattern against ~60K files from the Linux kernel takes about 30ms.

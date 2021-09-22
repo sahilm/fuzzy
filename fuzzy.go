@@ -7,6 +7,7 @@ package fuzzy
 
 import (
 	"sort"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -28,6 +29,7 @@ type Match struct {
 }
 
 const (
+	enableFasterCode               = true
 	firstCharMatchBonus            = 10 // 16
 	caseSensitiveBonus             = 1  // 3
 	penaltyUnmatched               = 1  // 2
@@ -271,23 +273,31 @@ func equalRuneFold(runes []rune, index int, targetRune rune) (score int) {
 func zeroOrFold(sr, tr rune) (score int) {
 	if tr == 0 {
 		if sr == 0 {
-			return caseSensitiveBonus
+			return 1
 		}
 
 		return 1
 	}
 
+	if sr == 0 {
+		return 0
+	}
+
 	return equalFold(sr, tr)
 }
 
-// Taken from strings.EqualFold.
 func equalFold(tr, sr rune) (score int) {
-	if tr == sr {
-		return caseSensitiveBonus
+	if enableFasterCode {
+		return equalFoldNew(tr, sr)
 	}
 
-	if isSeparator(tr) && isSeparator(sr) {
-		return 1
+	return equalFoldOld(tr, sr)
+}
+
+// Taken from strings.EqualFold.
+func equalFoldOld(tr, sr rune) (score int) {
+	if tr == sr {
+		return caseSensitiveBonus
 	}
 
 	if tr < sr {
@@ -296,6 +306,10 @@ func equalFold(tr, sr rune) (score int) {
 
 	// Fast check for ASCII.
 	if tr < utf8.RuneSelf {
+		if isSeparator(tr) && isSeparator(sr) {
+			return 1
+		}
+
 		// if targetRune is upper case. sourceRune must be lower case.
 		if sr <= 'Z' && 'A' <= sr && tr == sr+'a'-'A' {
 			return 1
@@ -318,14 +332,58 @@ func equalFold(tr, sr rune) (score int) {
 	return 0
 }
 
+func equalFoldNew(tr, sr rune) (score int) {
+	if tr == sr {
+		return caseSensitiveBonus
+	}
+
+	if tr < sr {
+		tr, sr = sr, tr
+	}
+
+	// Fast check for ASCII.
+	if tr < utf8.RuneSelf {
+		if tr >= 'a' {
+			if tr <= 'z' {
+				return equalLowerUpperCase(tr, sr)
+			}
+		} else if '0' <= tr && tr <= 'Z' {
+			return 0
+		}
+
+		return fastPunctuationCheck(sr)
+	}
+
 	// General case. SimpleFold(x) returns the next equivalent rune > x
 	// or wraps around to smaller values.
-	r := unicode.SimpleFold(targetRune)
-	for r != targetRune && r < sourceRune {
+	r := unicode.SimpleFold(sr)
+	for r != sr && r < tr {
 		r = unicode.SimpleFold(r)
 	}
 
-	if r == sourceRune {
+	if r == tr {
+		return 1
+	}
+
+	return 0
+}
+
+// if tr is lower case. sr must be upper case.
+func equalLowerUpperCase(tr, sr rune) (score int) {
+	if tr == sr+'a'-'A' {
+		return 1
+	}
+
+	return 0
+}
+
+// assumption: r is already in the lower part of the ASCII table.
+func fastPunctuationCheck(r rune) (score int) {
+	if r > 'Z' {
+		if r < 'a' {
+			return 1
+		}
+	} else if r < '0' {
 		return 1
 	}
 
@@ -340,13 +398,16 @@ func adjacentCharBonus(i, lastMatch, currentBonus int) int {
 	return 0
 }
 
-func isSeparator(s rune) bool {
+func isSeparator(r rune) bool {
+	if enableFasterCode {
+		return strings.IndexByte(separators, byte(r)) >= 0
+	}
+
 	for _, sep := range separators {
-		if s == sep {
+		if r == sep {
 			return true
 		}
 	}
-
 	return false
 }
 
