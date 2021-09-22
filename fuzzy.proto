@@ -1,0 +1,8 @@
+	syntax = "proto2";
+	package fuzzy;
+	option go_package = "../fuzzy";
+
+	message FindArgs {
+	  required string pattern = 1;
+	  repeated string datas = 2;
+	}
