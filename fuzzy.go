@@ -56,11 +56,11 @@ type Source interface {
 	Len() int
 }
 
-// StringSource is a simple implementation of the Source interface.
-type StringSource []string
+// stringSource is a simple implementation of the Source interface.
+type stringSource []string
 
-func (ss StringSource) String(i int) string { return ss[i] }
-func (ss StringSource) Len() int            { return len(ss) }
+func (ss stringSource) String(i int) string { return ss[i] }
+func (ss stringSource) Len() int            { return len(ss) }
 
 /*
 Find looks up pattern in data and returns matches
@@ -81,13 +81,13 @@ Penalties are applied for every character in the search string that wasn't match
 characters up to the first match.
 */
 func Find(source string, dictionary []string) Matches {
-	return FindFrom(source, StringSource(dictionary))
+	return FindFrom(source, stringSource(dictionary))
 }
 
 // BestMatch is an optimized version of Find()
 // assuming input is not empty and returning the best match.
 func BestMatch(source string, dictionary []string) *Match {
-	return BestMatchFrom(source, StringSource(dictionary))
+	return BestMatchFrom(source, stringSource(dictionary))
 }
 
 // FindFrom is an alternative implementation of Find
@@ -188,8 +188,9 @@ func (match *Match) Compare(sourceRunes []rune) bool {
 	for i := 0; i < len(match.Str); i += candidateSize {
 		candidate, candidateSize = nextTargetRune, nextSize
 		if score := equalRuneFold(sourceRunes, sourceIndex, candidate); score > 0 {
+			score = 0
 			if i == 0 {
-				score += firstCharMatchBonus
+				score = firstCharMatchBonus
 			}
 
 			if unicode.IsLower(last) && unicode.IsUpper(candidate) {
@@ -234,14 +235,14 @@ func (match *Match) Compare(sourceRunes []rune) bool {
 		// Tracking when the next match is coming up allows us to exhaustively find the best match and not necessarily
 		// the first match.
 		// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
-		// to match the second k thus giving this string a higher extra.
+		// to match the second k thus giving this string a higher score.
 		if matchedIndex > -1 {
 			if extra := zeroOrFold(nextSourceRune, nextTargetRune); extra > 0 {
 				if len(match.MatchedIndexes) == 0 {
 					penalty := matchedIndex * unmatchedLeadingCharPenalty
 					bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
 				}
-				match.Score += bestScore + extra
+				match.Score += bestScore // + extra
 				match.MatchedIndexes = append(match.MatchedIndexes, matchedIndex)
 				bestScore = -1
 				sourceIndex++
@@ -280,32 +281,42 @@ func zeroOrFold(sr, tr rune) (score int) {
 }
 
 // Taken from strings.EqualFold.
-func equalFold(sourceRune, targetRune rune) (score int) {
-	if sourceRune == targetRune {
+func equalFold(tr, sr rune) (score int) {
+	if tr == sr {
 		return caseSensitiveBonus
 	}
 
-	if targetRune == 0 {
+	if isSeparator(tr) && isSeparator(sr) {
 		return 1
 	}
 
-	if isSeparator(sourceRune) && isSeparator(targetRune) {
-		return 1
-	}
-
-	if sourceRune < targetRune {
-		sourceRune, targetRune = targetRune, sourceRune
+	if tr < sr {
+		tr, sr = sr, tr
 	}
 
 	// Fast check for ASCII.
-	if sourceRune < utf8.RuneSelf {
+	if tr < utf8.RuneSelf {
 		// if targetRune is upper case. sourceRune must be lower case.
-		if targetRune <= 'Z' && 'A' <= targetRune && sourceRune == targetRune+'a'-'A' {
+		if sr <= 'Z' && 'A' <= sr && tr == sr+'a'-'A' {
 			return 1
 		}
 
 		return 0
 	}
+
+	// General case. SimpleFold(x) returns the next equivalent rune > x
+	// or wraps around to smaller values.
+	r := unicode.SimpleFold(sr)
+	for r != sr && r < tr {
+		r = unicode.SimpleFold(r)
+	}
+
+	if r == tr {
+		return 1
+	}
+
+	return 0
+}
 
 	// General case. SimpleFold(x) returns the next equivalent rune > x
 	// or wraps around to smaller values.
