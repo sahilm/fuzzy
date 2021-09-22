@@ -21,14 +21,12 @@ linters:
     - forcetypeassert  # finds forced type assertions [fast: true, auto-fix: false]
     - funlen           # Tool for detection of long functions [fast: true, auto-fix: false]
     - gci              # mix the std and tealticks imports. Gci control golang package import order and make it always deterministic. [fast: true, auto-fix: true]
-    - gochecknoglobals # we simply use global vars. gochecknoglobals checks that no global variables exist
     - gochecknoinits   # we want to use init(). gochecknoinits checks that no init functions are present in Go code
     - gocognit         # Computes and checks the cognitive complexity of functions [fast: true, auto-fix: false]
     - goconst          # Finds repeated strings that could be replaced by a constant [fast: true, auto-fix: false]
     - gocritic         # Provides many diagnostics that check for bugs, performance and style issues. [fast: false, auto-fix: false]
     - gocyclo          # Computes and checks the cyclomatic complexity of functions [fast: true, auto-fix: false]
     - godot            # Check if comments end in a period [fast: true, auto-fix: true]
-    - godox            # we know our code contains TODO / FIXME. godox detects FIXME, TODO and other comment keywords
     - goerr113         # Golang linter to check the errors handling expressions
     - gofmt            # goimports does more. Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification [fast: true, auto-fix: true]
     - gofumpt          # mix the std and tealticks imports. Gofumpt checks whether code was gofumpt-ed.
@@ -51,7 +49,6 @@ linters:
     - nakedret         # Finds naked returns in functions greater than a specified function length [fast: true, auto-fix: false]
     - nestif           # Reports deeply nested if statements [fast: true, auto-fix: false]
     - nilerr           # Finds the code that returns nil even if it checks that the error is not nil. [fast: false, auto-fix: false]
-    - nlreturn         # nlreturn checks for a new line before return and branch statements to increase code clarity [fast: true, auto-fix: false]
     - noctx            # noctx finds sending http request without context.Context [fast: false, auto-fix: false]
     - nolintlint       # Reports ill-formed or insufficient nolint directives [fast: true, auto-fix: false]
     - prealloc         # Finds slice declarations that could potentially be preallocated [fast: true, auto-fix: false]
@@ -77,9 +74,12 @@ linters:
     - wrapcheck        # Checks that errors returned from external packages are wrapped
 
   disable:
-    - wsl              # Whitespace Linter - Forces you to use empty lines!
-    - paralleltest     # paralleltest detects missing usage of t.Parallel() method in your Go test
-    - scopelint        # Replaced by exportloopref. scopelint checks for unpinned variables in go programs
+    - gochecknoglobals # we simply use global vars. gochecknoglobals checks that no global variables exist
+    - godox            # we know our code contains TODO / FIXME. godox detects FIXME, TODO and other comment keywords
+    - golint           # Replaced by revive. Gofmt reformats Go source code, whereas golint prints out style mistakes
     - interfacer       # Replaced by exportloopref. Suggest narrower interface types
     - maligned         # Replaced by govet 'fieldalignment' (detect Go structs that would take less memory if their fields were sorted)
-    - golint           # Replaced by revive. Gofmt reformats Go source code, whereas golint prints out style mistakes
+    - nlreturn         # nlreturn checks for a new line before return and branch statements to increase code clarity [fast: true, auto-fix: false]
+    - paralleltest     # paralleltest detects missing usage of t.Parallel() method in your Go test
+    - scopelint        # Replaced by exportloopref. scopelint checks for unpinned variables in go programs
+    - wsl              # Whitespace Linter - Forces you to use empty lines!
