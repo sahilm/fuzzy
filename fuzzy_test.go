@@ -1,6 +1,7 @@
 package fuzzy
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -9,7 +10,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	isacikgoz "github.com/isacikgoz/fuzzy"
 	"github.com/kylelemons/godebug/pretty"
+	sahilm "github.com/sahilm/fuzzy"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -65,7 +68,7 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
-					Score:          38,
+					Score:          32,
 				},
 			},
 		},
@@ -75,7 +78,7 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "mémeTemps",
 					Index:          0,
 					MatchedIndexes: []int{0, 3, 5},
-					Score:          29,
+					Score:          23,
 				},
 			},
 		},
@@ -86,13 +89,13 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "my name is_Ramsey",
 					Index:          1,
 					MatchedIndexes: []int{0, 3, 11},
-					Score:          42,
+					Score:          36,
 				},
 				{
 					Str:            "moduleNameResolver.ts",
 					Index:          0,
 					MatchedIndexes: []int{0, 6, 10},
-					Score:          38,
+					Score:          32,
 				},
 			},
 		},
@@ -103,7 +106,7 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "aaa",
 					Index:          0,
 					MatchedIndexes: []int{0, 1, 2},
-					Score:          36,
+					Score:          30,
 				},
 			},
 		},
@@ -114,7 +117,7 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "The Black Knight",
 					Index:          0,
 					MatchedIndexes: []int{0, 10},
-					Score:          20,
+					Score:          16,
 				},
 			},
 		},
@@ -133,13 +136,33 @@ func TestFindWithCannedData(t *testing.T) {
 					Str:            "abc\\x",
 					Index:          0,
 					MatchedIndexes: []int{0, 1, 2, 4},
-					Score:          57,
+					Score:          49,
 				},
 			},
 		},
 	}
 	for _, c := range cases {
-		t.Run("Find="+c.pattern, func(t *testing.T) {
+		t.Run("sahilm.Find("+c.pattern+")", func(t *testing.T) {
+			matches := sahilm.Find(c.pattern, c.data)
+			if len(matches) != len(c.matches) {
+				t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
+			}
+			if diff := pretty.Compare(c.matches, matches); diff != "" {
+				t.Errorf("%v", diff)
+			}
+		})
+
+		t.Run("isacikgoz.Find("+c.pattern+")", func(t *testing.T) {
+			matches := isacikgoz.Find(context.Background(), c.pattern, c.data)
+			if len(matches) != len(c.matches) {
+				t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
+			}
+			if diff := pretty.Compare(c.matches, matches); diff != "" {
+				t.Errorf("%v", diff)
+			}
+		})
+
+		t.Run("tealfinance.Find("+c.pattern+")", func(t *testing.T) {
 			matches := Find(c.pattern, c.data)
 			if len(matches) != len(c.matches) {
 				t.Errorf("got %v Matches; expected %v match", len(matches), len(c.matches))
@@ -149,7 +172,7 @@ func TestFindWithCannedData(t *testing.T) {
 			}
 		})
 
-		t.Run("Best="+c.pattern, func(t *testing.T) {
+		t.Run("tealfinance.Best("+c.pattern+")", func(t *testing.T) {
 			best := BestMatch(c.pattern, c.data)
 			if best == nil && len(c.matches) > 0 {
 				t.Errorf("got best=%v ; expected %v match", best, len(c.matches))
@@ -198,16 +221,30 @@ func TestFindFromSource(t *testing.T) {
 			Str:            "Allie",
 			Index:          2,
 			MatchedIndexes: []int{0, 1},
-			Score:          16,
+			Score:          12,
 		}, Match{
 			Str:            "Alice",
 			Index:          0,
 			MatchedIndexes: []int{0, 1},
-			Score:          16,
+			Score:          12,
 		},
 	}
 
-	t.Run("FindFrom", func(t *testing.T) {
+	t.Run("sahilm.FindFrom", func(t *testing.T) {
+		got := sahilm.FindFrom("al", emps)
+		if diff := pretty.Compare(want, got); diff != "" {
+			t.Errorf("%v", diff)
+		}
+	})
+
+	t.Run("isacikgoz.FindFrom", func(t *testing.T) {
+		got := isacikgoz.FindFrom(context.Background(), "al", emps)
+		if diff := pretty.Compare(want, got); diff != "" {
+			t.Errorf("%v", diff)
+		}
+	})
+
+	t.Run("tealfinance.FindFrom", func(t *testing.T) {
 		got := FindFrom("al", emps)
 		if diff := pretty.Compare(want, got); diff != "" {
 			t.Errorf("%v", diff)
@@ -344,54 +381,70 @@ func TestFindWithRealworldData(t *testing.T) {
 	})
 }
 
-func BenchmarkFind(b *testing.B) {
-	b.Run("with unreal 4 (~16K files)", func(b *testing.B) {
-		bytes, err := ioutil.ReadFile("testdata/ue4_filenames.txt")
-		if err != nil {
-			b.Fatal(err)
+func BenchmarkUnreal4Files(b *testing.B) {
+	b.Log("~16K files from unreal 4")
+
+	bytes, err := ioutil.ReadFile("testdata/ue4_filenames.txt")
+	if err != nil {
+		b.Fatal(err)
+	}
+	filenames := strings.Split(string(bytes), "\n")
+
+	b.Run("sahilm.Find", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			sahilm.Find("lll", filenames)
 		}
-		filenames := strings.Split(string(bytes), "\n")
-		b.ResetTimer()
+	})
+
+	b.Run("isacikgoz.Find", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			isacikgoz.Find(context.Background(), "lll", filenames)
+		}
+	})
+
+	b.Run("tealfinance.Find", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			Find("lll", filenames)
 		}
 	})
 
-	b.Run("with linux kernel (~60K files)", func(b *testing.B) {
-		bytes, err := ioutil.ReadFile("testdata/linux_filenames.txt")
-		if err != nil {
-			b.Fatal(err)
-		}
-		filenames := strings.Split(string(bytes), "\n")
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			Find("alsa", filenames)
-		}
-	})
-}
-
-func BenchmarkBest(b *testing.B) {
-	b.Run("with unreal 4 (~16K files)", func(b *testing.B) {
-		bytes, err := ioutil.ReadFile("testdata/ue4_filenames.txt")
-		if err != nil {
-			b.Fatal(err)
-		}
-		filenames := strings.Split(string(bytes), "\n")
-		b.ResetTimer()
+	b.Run("tealfinance.BestMatch", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			BestMatch("lll", filenames)
 		}
 	})
+}
 
-	b.Run("with linux kernel (~60K files)", func(b *testing.B) {
-		bytes, err := ioutil.ReadFile("testdata/linux_filenames.txt")
-		if err != nil {
-			b.Fatal(err)
-		}
-		filenames := strings.Split(string(bytes), "\n")
-		b.ResetTimer()
+func BenchmarkLinuxFiles(b *testing.B) {
+	b.Log("~60K files from Linux kernel")
+
+	bytes, err := ioutil.ReadFile("testdata/linux_filenames.txt")
+	if err != nil {
+		b.Fatal(err)
+	}
+	filenames := strings.Split(string(bytes), "\n")
+
+	b.Run("sahilm.Find", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			BestMatch("alsa", filenames)
+			sahilm.Find("lll", filenames)
+		}
+	})
+
+	b.Run("isacikgoz.Find", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			isacikgoz.Find(context.Background(), "lll", filenames)
+		}
+	})
+
+	b.Run("tealfinance.Find", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			Find("lll", filenames)
+		}
+	})
+
+	b.Run("tealfinance.BestMatch", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			BestMatch("lll", filenames)
 		}
 	})
 }
@@ -469,19 +522,19 @@ func testFind(t *testing.T, source, want string, dico []string) {
 	matches := Find(source, dico)
 
 	if matches == nil {
-		t.Errorf("in=%q got=nil want=%q", source, want)
+		t.Errorf("source=%q got=nil want=%q", source, want)
 
 		return
 	}
 
 	if len(matches) == 0 {
-		t.Errorf("in=%q got=empty want=%q", source, want)
+		t.Errorf("source=%q got=empty want=%q", source, want)
 
 		return
 	}
 
 	if got := dico[matches[0].Index]; got != want {
-		t.Errorf("in=%q got=%q want=%q", source, matches[0].Index, want)
+		t.Errorf("source=%q got=%q want=%q", source, matches[0].Index, want)
 		t.Logf("matches=%+v", matches)
 	}
 }
@@ -492,13 +545,13 @@ func testBest(t *testing.T, source, want string, dico []string) {
 	best := BestMatch(source, dico)
 
 	if best == nil {
-		t.Errorf("in=%q got=nil want=%q", source, want)
+		t.Errorf("source=%q got=nil want=%q", source, want)
 
 		return
 	}
 
 	if got := dico[best.Index]; got != want {
-		t.Errorf("in=%q got={index:%v str:%q} want=%q", source, best.Index, dico[best.Index], want)
+		t.Errorf("source=%q got={index:%v str:%q} want=%q", source, best.Index, dico[best.Index], want)
 		t.Logf("best=%+v", best)
 	}
 }
@@ -595,7 +648,7 @@ func TestMatch_Compare(t *testing.T) {
 			got := match.Compare([]rune(c.source))
 
 			if got != c.want {
-				t.Errorf("in=%q target=%q got=%v want=%v", c.source, c.target, got, c.want)
+				t.Errorf("source=%q target=%q got=%v want=%v", c.source, c.target, got, c.want)
 				t.Logf("match=%+v", match)
 			}
 		})
