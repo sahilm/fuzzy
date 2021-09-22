@@ -28,9 +28,9 @@ type Match struct {
 }
 
 const (
-	firstCharMatchBonus            = 16
-	caseSensitiveBonus             = 3
-	penaltyUnmatched               = 2
+	firstCharMatchBonus            = 10 // 16
+	caseSensitiveBonus             = 1  // 3
+	penaltyUnmatched               = 1  // 2
 	matchFollowingSeparatorBonus   = 20
 	camelCaseMatchBonus            = 20
 	adjacentMatchBonus             = 5
@@ -236,7 +236,7 @@ func (match *Match) Compare(sourceRunes []rune) bool {
 		// For example given the pattern "tk" and search string "The Black Knight", exhaustively matching allows us
 		// to match the second k thus giving this string a higher extra.
 		if matchedIndex > -1 {
-			if extra := equalFold(nextSourceRune, nextTargetRune); extra > 0 {
+			if extra := zeroOrFold(nextSourceRune, nextTargetRune); extra > 0 {
 				if len(match.MatchedIndexes) == 0 {
 					penalty := matchedIndex * unmatchedLeadingCharPenalty
 					bestScore += max(penalty, maxUnmatchedLeadingCharPenalty)
@@ -265,6 +265,18 @@ func equalRuneFold(runes []rune, index int, targetRune rune) (score int) {
 	}
 
 	return equalFold(runes[index], targetRune)
+}
+
+func zeroOrFold(sr, tr rune) (score int) {
+	if tr == 0 {
+		if sr == 0 {
+			return caseSensitiveBonus
+		}
+
+		return 1
+	}
+
+	return equalFold(sr, tr)
 }
 
 // Taken from strings.EqualFold.
