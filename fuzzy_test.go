@@ -107,6 +107,17 @@ func TestFindWithCannedData(t *testing.T) {
 				},
 			},
 		},
+		// NULs are ignored and don't cause a panic
+		{
+			"ab", []string{"alphabet\x00\x00\x00\x00bet"}, []fuzzy.Match{
+				{
+					Str:            "alphabet\x00\x00\x00\x00bet",
+					Index:          0,
+					MatchedIndexes: []int{0, 5},
+					Score:          4,
+				},
+			},
+		},
 	}
 	for _, c := range cases {
 		matches := fuzzy.Find(c.pattern, c.data)
