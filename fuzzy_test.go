@@ -1,11 +1,11 @@
 package fuzzy_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/sahilm/fuzzy"
 
-	"io/ioutil"
 	"strings"
 
 	"fmt"
@@ -207,7 +207,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			},
 		}
 
-		bytes, err := ioutil.ReadFile("testdata/ue4_filenames.txt")
+		bytes, err := os.ReadFile("testdata/ue4_filenames.txt")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -254,7 +254,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			},
 		}
 
-		bytes, err := ioutil.ReadFile("testdata/linux_filenames.txt")
+		bytes, err := os.ReadFile("testdata/linux_filenames.txt")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -283,7 +283,7 @@ func TestFindWithRealworldData(t *testing.T) {
 
 func BenchmarkFind(b *testing.B) {
 	b.Run("with unreal 4 (~16K files)", func(b *testing.B) {
-		bytes, err := ioutil.ReadFile("testdata/ue4_filenames.txt")
+		bytes, err := os.ReadFile("testdata/ue4_filenames.txt")
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -295,7 +295,7 @@ func BenchmarkFind(b *testing.B) {
 	})
 
 	b.Run("with linux kernel (~60K files)", func(b *testing.B) {
-		bytes, err := ioutil.ReadFile("testdata/linux_filenames.txt")
+		bytes, err := os.ReadFile("testdata/linux_filenames.txt")
 		if err != nil {
 			b.Fatal(err)
 		}

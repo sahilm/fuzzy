@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
-	"io/ioutil"
 	"strings"
 
 	"time"
@@ -21,7 +21,7 @@ var filenames []string
 var g *gocui.Gui
 
 func main() {
-	filenamesBytes, err = ioutil.ReadFile("../testdata/ue4_filenames.txt")
+	filenamesBytes, err = os.ReadFile("../testdata/ue4_filenames.txt")
 	if err != nil {
 		panic(err)
 	}
