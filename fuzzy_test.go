@@ -31,62 +31,62 @@ func TestFindWithCannedData(t *testing.T) {
 		// (m = 10, n = 20, r = 20) - 18 unmatched chars = 32
 		{
 			"mnr", []string{"moduleNameResolver.ts"}, []fuzzy.Match{
-			{
-				Str:            "moduleNameResolver.ts",
-				Index:          0,
-				MatchedIndexes: []int{0, 6, 10},
-				Score:          32,
+				{
+					Str:            "moduleNameResolver.ts",
+					Index:          0,
+					MatchedIndexes: []int{0, 6, 10},
+					Score:          32,
+				},
 			},
-		},
 		},
 		{
 			"mmt", []string{"mémeTemps"}, []fuzzy.Match{
-			{
-				Str:            "mémeTemps",
-				Index:          0,
-				MatchedIndexes: []int{0, 3, 5},
-				Score:          23,
+				{
+					Str:            "mémeTemps",
+					Index:          0,
+					MatchedIndexes: []int{0, 3, 5},
+					Score:          23,
+				},
 			},
-		},
 		},
 		// ranking
 		{
 			"mnr", []string{"moduleNameResolver.ts", "my name is_Ramsey"}, []fuzzy.Match{
-			{
-				Str:            "my name is_Ramsey",
-				Index:          1,
-				MatchedIndexes: []int{0, 3, 11},
-				Score:          36,
+				{
+					Str:            "my name is_Ramsey",
+					Index:          1,
+					MatchedIndexes: []int{0, 3, 11},
+					Score:          36,
+				},
+				{
+					Str:            "moduleNameResolver.ts",
+					Index:          0,
+					MatchedIndexes: []int{0, 6, 10},
+					Score:          32,
+				},
 			},
-			{
-				Str:            "moduleNameResolver.ts",
-				Index:          0,
-				MatchedIndexes: []int{0, 6, 10},
-				Score:          32,
-			},
-		},
 		},
 		// simple repeated pattern and adjacent match bonus
 		{
 			"aaa", []string{"aaa", "bbb"}, []fuzzy.Match{
-			{
-				Str:            "aaa",
-				Index:          0,
-				MatchedIndexes: []int{0, 1, 2},
-				Score:          30,
+				{
+					Str:            "aaa",
+					Index:          0,
+					MatchedIndexes: []int{0, 1, 2},
+					Score:          30,
+				},
 			},
-		},
 		},
 		// exhaustive matching
 		{
 			"tk", []string{"The Black Knight"}, []fuzzy.Match{
-			{
-				Str:            "The Black Knight",
-				Index:          0,
-				MatchedIndexes: []int{0, 10},
-				Score:          16,
+				{
+					Str:            "The Black Knight",
+					Index:          0,
+					MatchedIndexes: []int{0, 10},
+					Score:          16,
+				},
 			},
-		},
 		},
 		// any unmatched char in the pattern removes the whole match
 		{
@@ -99,13 +99,24 @@ func TestFindWithCannedData(t *testing.T) {
 		// separator bonus
 		{
 			"abcx", []string{"abc\\x"}, []fuzzy.Match{
-			{
-				Str:            "abc\\x",
-				Index:          0,
-				MatchedIndexes: []int{0, 1, 2, 4},
-				Score:          49,
+				{
+					Str:            "abc\\x",
+					Index:          0,
+					MatchedIndexes: []int{0, 1, 2, 4},
+					Score:          49,
+				},
 			},
 		},
+		// NULs are ignored and don't cause a panic
+		{
+			"ab", []string{"alphabet\x00\x00\x00\x00bet"}, []fuzzy.Match{
+				{
+					Str:            "alphabet\x00\x00\x00\x00bet",
+					Index:          0,
+					MatchedIndexes: []int{0, 5},
+					Score:          4,
+				},
+			},
 		},
 	}
 	for _, c := range cases {
@@ -174,25 +185,25 @@ func TestFindWithRealworldData(t *testing.T) {
 
 			{
 				"ue4", 4, []string{
-				"UE4Game.cpp",
-				"UE4Build.cs",
-				"UE4Game.Build.cs",
-				"UE4BuildUtils.cs",
-			},
+					"UE4Game.cpp",
+					"UE4Build.cs",
+					"UE4Game.Build.cs",
+					"UE4BuildUtils.cs",
+				},
 			},
 			{
 				"lll", 3, []string{
-				"LogFileLogger.cs",
-				"LockFreeListImpl.h",
-				"LevelExporterLOD.h",
-			},
+					"LogFileLogger.cs",
+					"LockFreeListImpl.h",
+					"LevelExporterLOD.h",
+				},
 			},
 			{
 				"aes", 3, []string{
-				"AES.h",
-				"AES.cpp",
-				"ActiveSound.h",
-			},
+					"AES.h",
+					"AES.cpp",
+					"ActiveSound.h",
+				},
 			},
 		}
 
@@ -227,19 +238,19 @@ func TestFindWithRealworldData(t *testing.T) {
 
 			{
 				"make", 4, []string{
-				"make",
-				"makelst",
-				"Makefile",
-				"Makefile",
-			},
+					"make",
+					"makelst",
+					"Makefile",
+					"Makefile",
+				},
 			},
 			{
 				"alsa", 4, []string{
-				"alsa.h",
-				"alsa.c",
-				"aw2-alsa.c",
-				"cx88-alsa.c",
-			},
+					"alsa.h",
+					"alsa.c",
+					"aw2-alsa.c",
+					"cx88-alsa.c",
+				},
 			},
 		}
 
