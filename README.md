@@ -76,6 +76,103 @@ func contains(needle int, haystack []int) bool {
 	return false
 }
 ``` 
+
+### Unicode Example
+
+Fuzzy matching works with Unicode strings as well:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/sahilm/fuzzy"
+)
+
+func main() {
+	pattern := "коф"
+	data := []string{"кофе", "кошка", "фокус", "офис"}
+	matches := fuzzy.Find(pattern, data)
+	for _, match := range matches {
+		fmt.Printf("Matched: %s (at indexes %v)\n", match.Str, match.MatchedIndexes)
+	}
+}
+```
+
+### Using FindFrom for Custom Types
+
+If your data is not a slice of strings, implement the `fuzzy.Source` interface and use `FindFrom`:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/sahilm/fuzzy"
+)
+
+type File struct {
+	Name string
+	Path string
+}
+
+type FileList []File
+
+func (f FileList) String(i int) string { return f[i].Name }
+func (f FileList) Len() int           { return len(f) }
+
+func main() {
+	files := FileList{
+		{Name: "main.go", Path: "/home/user/main.go"},
+		{Name: "README.md", Path: "/home/user/README.md"},
+		{Name: "fuzzy.go", Path: "/home/user/fuzzy.go"},
+	}
+	pattern := "md"
+	matches := fuzzy.FindFrom(pattern, files)
+	for _, match := range matches {
+		fmt.Printf("Matched: %s (at indexes %v)\n", files[match.Index].Path, match.MatchedIndexes)
+	}
+}
+```
+
+### Highlighting Matches with Underline
+
+You can highlight matches in different ways, for example, using underline instead of bold:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/sahilm/fuzzy"
+)
+
+func main() {
+	const underline = "\033[4m%s\033[0m"
+	pattern := "fz"
+	data := []string{"fuzzy", "fizz", "buzz"}
+	matches := fuzzy.Find(pattern, data)
+	for _, match := range matches {
+		for i := 0; i < len(match.Str); i++ {
+			if contains(i, match.MatchedIndexes) {
+				fmt.Print(fmt.Sprintf(underline, string(match.Str[i])))
+			} else {
+				fmt.Print(string(match.Str[i]))
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func contains(needle int, haystack []int) bool {
+	for _, i := range haystack {
+		if needle == i {
+			return true
+		}
+	}
+	return false
+}
+```
 If the data you want to match isn't a slice of strings, you can use `FindFrom` by implementing
 the provided `Source` interface. Here's an example:
 
