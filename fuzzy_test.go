@@ -1,13 +1,15 @@
 package fuzzy_test
 
 import (
-	"fmt"
 	"os"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/sahilm/fuzzy"
+
+	"strings"
+
+	"fmt"
+	"time"
 
 	"github.com/kylelemons/godebug/pretty"
 )
@@ -180,6 +182,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			numMatches int
 			filenames  []string
 		}{
+
 			{
 				"ue4", 4, []string{
 					"UE4Build.cs",
@@ -232,6 +235,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			numMatches int
 			filenames  []string
 		}{
+
 			{
 				"make", 4, []string{
 					"make",
@@ -274,6 +278,7 @@ func TestFindWithRealworldData(t *testing.T) {
 			}
 		}
 	})
+
 }
 
 func BenchmarkFind(b *testing.B) {
