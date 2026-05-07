@@ -1,15 +1,13 @@
 package fuzzy_test
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/sahilm/fuzzy"
-
-	"strings"
-
-	"fmt"
-	"time"
 
 	"github.com/kylelemons/godebug/pretty"
 )
@@ -158,13 +156,13 @@ func TestFindFromSource(t *testing.T) {
 	}
 	want := fuzzy.Matches{
 		{
-			Str:            "Allie",
-			Index:          2,
+			Str:            "Alice",
+			Index:          0,
 			MatchedIndexes: []int{0, 1},
 			Score:          12,
 		}, {
-			Str:            "Alice",
-			Index:          0,
+			Str:            "Allie",
+			Index:          2,
 			MatchedIndexes: []int{0, 1},
 			Score:          12,
 		},
@@ -182,20 +180,19 @@ func TestFindWithRealworldData(t *testing.T) {
 			numMatches int
 			filenames  []string
 		}{
-
 			{
 				"ue4", 4, []string{
-					"UE4Game.cpp",
 					"UE4Build.cs",
-					"UE4Game.Build.cs",
+					"UE4Game.cpp",
 					"UE4BuildUtils.cs",
+					"UE4Game.Build.cs",
 				},
 			},
 			{
 				"lll", 3, []string{
 					"LogFileLogger.cs",
-					"LockFreeListImpl.h",
 					"LevelExporterLOD.h",
+					"LockFreeListImpl.h",
 				},
 			},
 			{
@@ -235,7 +232,6 @@ func TestFindWithRealworldData(t *testing.T) {
 			numMatches int
 			filenames  []string
 		}{
-
 			{
 				"make", 4, []string{
 					"make",
@@ -246,10 +242,10 @@ func TestFindWithRealworldData(t *testing.T) {
 			},
 			{
 				"alsa", 4, []string{
-					"alsa.h",
 					"alsa.c",
+					"alsa.h",
 					"aw2-alsa.c",
-					"cx88-alsa.c",
+					"ivtv-alsa.h",
 				},
 			},
 		}
@@ -278,7 +274,6 @@ func TestFindWithRealworldData(t *testing.T) {
 			}
 		}
 	})
-
 }
 
 func BenchmarkFind(b *testing.B) {
