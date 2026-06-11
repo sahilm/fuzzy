@@ -1,6 +1,7 @@
 package fuzzy_test
 
 import (
+	"iter"
 	"os"
 	"testing"
 
@@ -144,6 +145,16 @@ func (e employees) Len() int {
 	return len(e)
 }
 
+func (e employees) Values() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for i := 0; i < e.Len(); i++ {
+			if !yield(e.String(i)) {
+				return
+			}
+		}
+	}
+}
+
 func TestFindFromSource(t *testing.T) {
 	emps := employees{
 		{
@@ -170,6 +181,37 @@ func TestFindFromSource(t *testing.T) {
 		},
 	}
 	got := fuzzy.FindFrom("al", emps)
+	if diff := pretty.Compare(want, got); diff != "" {
+		t.Errorf("%v", diff)
+	}
+}
+
+func TestFindFromIter(t *testing.T) {
+	emps := employees{
+		{
+			name: "Alice",
+		},
+		{
+			name: "Bob",
+		},
+		{
+			name: "Allie",
+		},
+	}
+	want := fuzzy.Matches{
+		{
+			Str:            "Alice",
+			Index:          0,
+			MatchedIndexes: []int{0, 1},
+			Score:          12,
+		}, {
+			Str:            "Allie",
+			Index:          2,
+			MatchedIndexes: []int{0, 1},
+			Score:          12,
+		},
+	}
+	got := fuzzy.FindFromIter("al", emps.Values())
 	if diff := pretty.Compare(want, got); diff != "" {
 		t.Errorf("%v", diff)
 	}
