@@ -155,6 +155,29 @@ func (e employees) Values() iter.Seq[string] {
 	}
 }
 
+func TestFindNoSort(t *testing.T) {
+	// The higher-scoring match ("my name is_Ramsey", 36) comes second in the
+	// input, so preserving input order proves results are returned unsorted.
+	want := fuzzy.Matches{
+		{
+			Str:            "moduleNameResolver.ts",
+			Index:          0,
+			MatchedIndexes: []int{0, 6, 10},
+			Score:          32,
+		},
+		{
+			Str:            "my name is_Ramsey",
+			Index:          1,
+			MatchedIndexes: []int{0, 3, 11},
+			Score:          36,
+		},
+	}
+	got := fuzzy.FindNoSort("mnr", []string{"moduleNameResolver.ts", "my name is_Ramsey"})
+	if diff := pretty.Compare(want, got); diff != "" {
+		t.Errorf("%v", diff)
+	}
+}
+
 func TestFindFromSource(t *testing.T) {
 	emps := employees{
 		{
