@@ -125,6 +125,12 @@ func main() {
 }
 ```
 
+If your data is produced lazily, you can use `FindFromIter` to match against a Go iterator
+(`iter.Seq[string]`) instead of a `Source`.
+
+Results are sorted by match quality by default. Each function has a `NoSort` variant that skips
+sorting: `FindNoSort`, `FindFromNoSort`, and `FindFromIterNoSort`.
+
 Check out the [godoc](https://godoc.org/github.com/sahilm/fuzzy) for detailed documentation.
 
 ## Installation
