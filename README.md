@@ -1,7 +1,7 @@
 <img src="assets/search-gopher-1.png" alt="gopher looking for stuff">  <img src="assets/search-gopher-2.png" alt="gopher found stuff">
 
 # fuzzy
-[![Build Status](https://travis-ci.org/sahilm/fuzzy.svg?branch=master)](https://travis-ci.org/sahilm/fuzzy)
+[![Build Status](https://github.com/sahilm/fuzzy/actions/workflows/go.yml/badge.svg)](https://github.com/sahilm/fuzzy/actions/workflows/go.yml)
 [![Documentation](https://godoc.org/github.com/sahilm/fuzzy?status.svg)](https://godoc.org/github.com/sahilm/fuzzy)
 
 Go library that provides fuzzy string matching optimized for filenames and code symbols in the style of Sublime Text, 
